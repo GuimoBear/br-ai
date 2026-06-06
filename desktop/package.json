@@ -1,0 +1,23 @@
+{
+  "name": "br-ai-desktop",
+  "version": "0.1.0",
+  "description": "Simulador/depurador e (futuro) editor de arvores para a IA de homunculos BR-AI",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "host-smoke": "node host_smoke.js",
+    "web": "node web/serve.js",
+    "viz-smoke": "node eleanor_viz_smoke.js",
+    "sera-viz-smoke": "node sera_viz_smoke.js",
+    "persist-smoke": "node sim_persist_smoke.js"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "playwright": "^1.60.0",
+    "playwright-core": "^1.60.0"
+  },
+  "dependencies": {
+    "fengari": "^0.1.4"
+  }
+}

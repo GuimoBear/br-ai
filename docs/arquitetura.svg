@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 452" width="720" role="img" aria-label="Arquitetura BR-AI: mesma arvore de comportamento, cliente trocavel">
+  <title>BR-AI — mesma BT, cliente trocável</title>
+  <style>
+    text{font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;}
+    .t{font-size:14px;font-weight:500;}
+    .s{font-size:11.5px;}
+  </style>
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#9c9a92" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <rect x="4" y="4" width="712" height="444" rx="12" fill="#FBFAF7" stroke="#E5E3DB"/>
+  <text x="360" y="33" text-anchor="middle" font-size="16" font-weight="500" fill="#2c2c2a">Mesma BT, cliente trocável</text>
+  <text x="360" y="52" text-anchor="middle" class="s" fill="#6b6a64">a mesma árvore de comportamento roda nos três — só muda o backend sob ro_api.lua</text>
+
+  <!-- nucleo compartilhado -->
+  <rect x="70" y="68" width="580" height="110" rx="14" fill="#E1F5EE" stroke="#0F6E56"/>
+  <text x="360" y="90" text-anchor="middle" class="t" fill="#0F6E56">Árvore de comportamento (Lua) — decisão pura</text>
+  <text x="360" y="108" text-anchor="middle" class="s" fill="#1D9E75">lê o blackboard → escreve UMA intenção (bb.intent)</text>
+  <rect x="88" y="122" width="172" height="40" rx="8" fill="#FFFFFF" stroke="#5DCAA5"/>
+  <text x="174" y="147" text-anchor="middle" font-size="13" font-weight="500" fill="#0F6E56">motor de BT</text>
+  <rect x="274" y="122" width="172" height="40" rx="8" fill="#FFFFFF" stroke="#5DCAA5"/>
+  <text x="360" y="147" text-anchor="middle" font-size="13" font-weight="500" fill="#0F6E56">behaviors + registry</text>
+  <rect x="460" y="122" width="172" height="40" rx="8" fill="#FFFFFF" stroke="#5DCAA5"/>
+  <text x="546" y="147" text-anchor="middle" font-size="13" font-weight="500" fill="#0F6E56">perfis + dados de skill</text>
+
+  <line x1="360" y1="178" x2="360" y2="204" stroke="#9c9a92" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- seam: a unica interface (ponto de troca) -->
+  <rect x="176" y="206" width="368" height="48" rx="8" fill="#FAEEDA" stroke="#BA7517"/>
+  <text x="360" y="227" text-anchor="middle" class="t" fill="#854F0B">ro_api.lua — única interface com o cliente</text>
+  <text x="360" y="244" text-anchor="middle" class="s" fill="#9a6a12">GetV · Move · SkillObject · SkillGround · GetTick</text>
+
+  <!-- fan-out para os tres backends -->
+  <line x1="360" y1="254" x2="142" y2="296" stroke="#9c9a92" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="360" y1="254" x2="360" y2="296" stroke="#9c9a92" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="360" y1="254" x2="578" y2="296" stroke="#9c9a92" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <rect x="40" y="298" width="204" height="74" rx="10" fill="#E6F1FB" stroke="#185FA5"/>
+  <text x="142" y="322" text-anchor="middle" class="t" fill="#0C447C">No jogo (RO)</text>
+  <text x="142" y="340" text-anchor="middle" class="s" fill="#185FA5">globais nativas do cliente</text>
+  <text x="142" y="357" text-anchor="middle" class="s" fill="#185FA5">AI.lua aplica os efeitos</text>
+
+  <rect x="258" y="298" width="204" height="74" rx="10" fill="#E6F1FB" stroke="#185FA5"/>
+  <text x="360" y="322" text-anchor="middle" class="t" fill="#0C447C">Desktop (Electron)</text>
+  <text x="360" y="340" text-anchor="middle" class="s" fill="#185FA5">mock via Fengari (Node)</text>
+  <text x="360" y="357" text-anchor="middle" class="s" fill="#185FA5">lua_host.js</text>
+
+  <rect x="476" y="298" width="204" height="74" rx="10" fill="#E6F1FB" stroke="#185FA5"/>
+  <text x="578" y="322" text-anchor="middle" class="t" fill="#0C447C">Navegador (web)</text>
+  <text x="578" y="340" text-anchor="middle" class="s" fill="#185FA5">fengari-web + serve.js</text>
+  <text x="578" y="357" text-anchor="middle" class="s" fill="#185FA5">lua_host_web.js</text>
+
+  <!-- fluxo por tick -->
+  <rect x="40" y="390" width="640" height="46" rx="10" fill="#F1EFE8" stroke="#DAD8CE"/>
+  <text x="360" y="409" text-anchor="middle" font-size="12" font-weight="500" fill="#4a4a46">Fluxo por tick — idêntico nos três:</text>
+  <text x="360" y="425" text-anchor="middle" class="s" fill="#5F5E5A">readCommand → perception → tree:tick (decide) → applyIntent (efeitos reais)</text>
+</svg>

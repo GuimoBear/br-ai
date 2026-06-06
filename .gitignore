@@ -1,0 +1,22 @@
+# --- Dependências (reinstale com: cd desktop && npm install) ---
+node_modules/
+
+# --- Artefatos gerados pelo botão "Gerar Lua" do editor ---
+# A FONTE da verdade de uma árvore é trees/<nome>/tree.json; o restante é gerado.
+# (NÃO afeta lua/src/tree_homun.lua, que é a árvore padrão carregada pelo engine.)
+trees/*/dist/
+trees/*/*.zip
+trees/*/config.lua
+trees/*/tree_homun.lua
+trees/*/monsters.lua
+trees/*/skill_choice.lua
+trees/*/summon_choice.lua
+
+# --- Scratch/depuração ---
+desktop/_*.js
+
+# --- Lixo de SO / editores ---
+.DS_Store
+Thumbs.db
+*.swp
+*~

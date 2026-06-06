@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lua-tests:
+    name: Testes Lua (Lua ${{ matrix.lua }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        lua: [ "5.1", "5.3", "5.4" ]   # 5.1 = baseline do cliente do RO; 5.3/5.4 = VMs modernas
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar Lua ${{ matrix.lua }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y "lua${{ matrix.lua }}"
+          lua${{ matrix.lua }} -v
+
+      - name: Rodar a suíte de testes (tools/*_test.lua + outputs_chk.lua)
+        run: node tools/run_lua_tests.js "lua${{ matrix.lua }}"
+
+  desktop-smokes:
+    name: Smokes desktop (ponte Fengari, visualizações, persistência)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Instalar dependências (Fengari)
+        run: npm ci
+        working-directory: desktop
+
+      - name: Smokes (a mesma árvore Lua rodando via Fengari, sem UI)
+        working-directory: desktop
+        run: |
+          npm run viz-smoke
+          npm run sera-viz-smoke
+          npm run persist-smoke
+          npm run host-smoke
+
+  lint:
+    name: Lint (luacheck)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar luacheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y luarocks
+          sudo luarocks install luacheck
+
+      - name: Rodar luacheck (config em .luacheckrc)
+        run: luacheck lua tools outputs_chk.lua
+
+  dist-packages:
+    name: Pacotes dist/ (artefatos de build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Gerar dist/ + .zip de todas as árvores (headless, sem Electron)
+        run: node tools/build_all_dists.js
+
+      - name: Publicar os .zip como artefatos
+        uses: actions/upload-artifact@v4
+        with:
+          name: brai-dist-packages
+          path: trees/*/*.zip
+          if-no-files-found: error
