@@ -49,6 +49,11 @@ jobs:
           npm run sera-viz-smoke
           npm run persist-smoke
           npm run host-smoke
+          npm run test:bridge
+          npm run test:luahost
+          npm run test:s3
+          npm run smoke:statichost
+          npm run test:buildstatic
 
   lint:
     name: Lint (luacheck)
@@ -84,3 +89,31 @@ jobs:
           name: brai-dist-packages
           path: trees/*/*.zip
           if-no-files-found: error
+
+  browser-smokes:
+    name: "Smokes de browser (Playwright web + estatica)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+        working-directory: desktop
+
+      - name: Instalar Chromium (Playwright)
+        run: npx playwright install --with-deps chromium
+        working-directory: desktop
+
+      - name: Smoke WEB (refatoracao fs_bridge/lua_host_web em browser real)
+        run: npm run smoke:web
+        working-directory: desktop
+
+      - name: Smoke ESTATICA (S3 backend + bundle Lua + regra de storage)
+        run: npm run smoke:static-browser
+        working-directory: desktop

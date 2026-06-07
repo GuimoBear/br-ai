@@ -9,7 +9,16 @@
     "web": "node web/serve.js",
     "viz-smoke": "node eleanor_viz_smoke.js",
     "sera-viz-smoke": "node sera_viz_smoke.js",
-    "persist-smoke": "node sim_persist_smoke.js"
+    "persist-smoke": "node sim_persist_smoke.js",
+    "build:static": "node ../tools/build_static.js",
+    "test:bridge": "node ../tools/bridge_core_test.js",
+    "test:luahost": "node ../tools/lua_host_core_test.js",
+    "test:s3": "node ../tools/s3_backend_test.js",
+    "smoke:statichost": "node ../tools/static_host_smoke.js",
+    "test:buildstatic": "node ../tools/build_static_test.js",
+    "test:node": "node ../tools/bridge_core_test.js && node ../tools/lua_host_core_test.js && node ../tools/s3_backend_test.js && node host_smoke.js && node sim_persist_smoke.js && node eleanor_viz_smoke.js && node sera_viz_smoke.js",
+    "smoke:web": "node web_browser_smoke.js",
+    "smoke:static-browser": "node static_browser_smoke.js"
   },
   "license": "MIT",
   "devDependencies": {

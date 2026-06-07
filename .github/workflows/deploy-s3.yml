@@ -1,0 +1,47 @@
+name: Deploy estático (S3 + CloudFront)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  id-token: write   # OIDC: credenciais AWS efêmeras (sem chaves longas)
+  contents: read
+
+concurrency:
+  group: deploy-s3
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Instalar deps (desktop)
+        run: cd desktop && npm ci
+      - name: Build estático
+        run: node tools/build_static.js
+      - name: Gate — smoke do host (bundle Lua no Fengari)
+        run: node tools/static_host_smoke.js
+      - name: Gate — validação do build
+        run: node tools/build_static_test.js
+      - name: Credenciais AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Sync assets imutáveis (cache 1 ano)
+        run: aws s3 sync dist-static/assets "s3://${{ vars.S3_BUCKET }}/assets" --delete --cache-control "public,max-age=31536000,immutable"
+      - name: Sync dados imutáveis (exceto manifest)
+        run: aws s3 sync dist-static/data "s3://${{ vars.S3_BUCKET }}/data" --delete --cache-control "public,max-age=31536000,immutable" --exclude "manifest.json"
+      - name: HTML + manifest (cache curto)
+        run: |
+          aws s3 cp dist-static/index.html       "s3://${{ vars.S3_BUCKET }}/index.html"            --cache-control "public,max-age=60,must-revalidate"
+          aws s3 cp dist-static/editor.html      "s3://${{ vars.S3_BUCKET }}/editor.html"           --cache-control "public,max-age=60,must-revalidate"
+          aws s3 cp dist-static/data/manifest.json "s3://${{ vars.S3_BUCKET }}/data/manifest.json"  --cache-control "public,max-age=60,must-revalidate"
+      - name: Invalidar CloudFront
+        run: aws cloudfront create-invalidation --distribution-id "${{ vars.CLOUDFRONT_ID }}" --paths "/index.html" "/editor.html" "/data/manifest.json"

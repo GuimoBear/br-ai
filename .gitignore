@@ -12,8 +12,11 @@ trees/*/monsters.lua
 trees/*/skill_choice.lua
 trees/*/summon_choice.lua
 
+# --- Build estático (S3/CloudFront): gerado por tools/build_static.js ---
+dist-static/
+
 # --- Scratch/depuração ---
-desktop/_*.js
+desktop/_*
 
 # --- Lixo de SO / editores ---
 .DS_Store

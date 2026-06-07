@@ -1,0 +1,18 @@
+/* static.css — só na versão estática. Limita a 960px e adapta o layout. */
+html, body { margin: 0; }
+#braibar, header, #controls, #toolbar, #app, .brai-static-bar {
+  max-width: 960px; margin-left: auto; margin-right: auto;
+}
+.brai-static-bar {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  padding: 6px 10px; background: #0d1114; color: #cfd6dd;
+  border-bottom: 1px solid #263038; font: 13px system-ui, sans-serif;
+}
+.brai-static-bar button, .brai-static-bar label.file {
+  font: 13px system-ui; padding: 4px 10px; cursor: pointer;
+  background: #1b232a; color: #cfd6dd; border: 1px solid #2c3a44; border-radius: 4px;
+}
+.brai-static-bar .muted { color: #8a97a2; }
+.brai-static-bar input[type=file] { display: none; }
+/* Em telas estreitas, empilha o simulador (canvas em cima, painel embaixo). */
+@media (max-width: 980px) { #app { flex-direction: column; } #right { width: auto; } }
