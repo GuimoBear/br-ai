@@ -16,24 +16,28 @@ async function main() {
   const inspect = () => page.evaluate(() => {
     const root = document.querySelector('#scModal .sc-rows');
     const rows = [...root.querySelectorAll('.sc-row')];
-    const roleOf = (frag) => rows.find(r => ((r.querySelector('.sc-role') || {}).textContent || '').toLowerCase().includes(frag));
-    const hasNone = (frag) => { const r = roleOf(frag); return !!(r && r.querySelector('.sc-none')); };
+    const hasRole = (role) => !!root.querySelector('.sc-skills[data-role="' + role + '"]');
     const lines = (role) => root.querySelectorAll('.sc-skills[data-role="' + role + '"] .sc-skill').length;
     return {
       rows: rows.length, none: root.querySelectorAll('.sc-none').length,
       skills: root.querySelectorAll('.sc-skill').length,
+      editSkills: root.querySelectorAll('.sc-skill:not(.sc-skill-ro)').length,
+      roSkills: root.querySelectorAll('.sc-skill.sc-skill-ro').length,
+      roRm: root.querySelectorAll('.sc-skill.sc-skill-ro .sc-rm').length,
+      paramLinks: root.querySelectorAll('.sc-paramlink').length,
       skillLvls: root.querySelectorAll('.sc-skill-lvl').length,
       adds: root.querySelectorAll('.sc-add').length, rms: root.querySelectorAll('.sc-rm').length,
       descInline: root.querySelectorAll('.sc-skills .sc-desc').length,    // deve ser 0 agora
       emptySkill: root.querySelectorAll('.sc-empty-skill').length,
-      mainNone: hasNone('main'), aoeNone: hasNone('área'),
+      hasMain: hasRole('mainAtk'), hasAoe: hasRole('aoeAtk'), hasHealSelf: hasRole('healSelf'), hasCastling: hasRole('castling'),
       aoeLines: lines('aoeAtk'), offLines: lines('offBuff'),
+      healSelfLines: lines('healSelf'), castlingLines: lines('castling'),
       offReset: !!document.querySelector('#scModal .sc-reset[data-role="offBuff"]'),
       summon: !!document.querySelector('#scModal .sm-panel'),
       comboLink: !!document.querySelector('#scModal #scComboLink'),
     };
   });
-  const selHomun = async (t) => { await page.selectOption('#scHomunSel', String(t)); await page.waitForFunction(() => document.querySelectorAll('#scModal .sc-rows .sc-row').length === 4, null, { timeout: 20000 }); };
+  const selHomun = async (t) => { await page.selectOption('#scHomunSel', String(t)); await page.waitForFunction((t) => !!document.querySelector('#scModal .sc-rows[data-homun="' + t + '"]'), t, { timeout: 20000 }); };
   try {
     try { browser = await chromium.launch(); } catch (e) { console.log('SKIP: chromium não instalado'); srv.kill(); process.exit(0); }
     page = await browser.newPage();
@@ -45,18 +49,19 @@ async function main() {
     await page.waitForFunction(() => { const b = document.getElementById('btnSkills'); return !!(b && b.onclick); }, null, { timeout: 20000 });
     origSkills = await page.evaluate(async () => (await window.skillChoiceIO.load()).data);   // p/ restaurar
     await page.click('#btnSkills');
-    await page.waitForFunction(() => document.querySelectorAll('#scModal .sc-rows .sc-row').length === 4, null, { timeout: 20000 });
+    await page.waitForFunction(() => !!document.querySelector('#scModal .sc-rows[data-homun]'), null, { timeout: 20000 });
 
     // Dieter: estrutura nova (add/remove, sem desc inline)
     await selHomun(51);
     let d = await inspect();
-    ok(d.rows === 4, 'Dieter: 4 papéis');
-    ok(d.mainNone, 'Dieter: Main → "não há skill"');
+    ok(d.none === 0, 'nenhuma linha "Não há skill" — papéis vazios são OCULTOS');
+    ok(d.hasAoe && !d.hasMain, 'Dieter: mostra AoE e OCULTA Main (sem skill principal)');
     ok(d.aoeLines === 2, 'Dieter: AoE 2 skills padrão (' + d.aoeLines + ')');
     ok(await page.evaluate(() => !document.getElementById('scExport')), 'web: SEM import/export de skills no modal (só na estática)');
     ok(d.descInline === 0, 'sem descrição inline (.sc-desc) — só no hover (' + d.descInline + ')');
-    ok(d.adds === 3, 'um seletor "adicionar" por papel com candidatos (3; Main não tem)');
-    ok(d.rms === d.skills && d.skills > 0, 'um ✕ remover por skill (' + d.rms + '=' + d.skills + ')');
+    ok(d.adds === 3, 'um seletor "adicionar" por papel com candidatos (Dieter: AoE/offBuff/defBuff = 3)');
+    ok(d.rms === d.editSkills && d.editSkills > 0, 'um ✕ remover por skill editável (' + d.rms + '=' + d.editSkills + ')');
+    ok(d.roRm === 0, 'papéis fixos são só leitura (sem ✕ remover)');
 
     // hover na ZONA ÚNICA (nome+nível) → card com o NOME REAL (não "undefined")
     await page.hover('#scModal .sc-skills[data-role="aoeAtk"] .sc-skill-hot');
@@ -100,8 +105,17 @@ async function main() {
     await selHomun(49); let b = await inspect();
     ok(b.offLines === 2, 'Bayeri offBuff 2 skills (Golden Ferse + Angriff Modus)');
     await selHomun(52); let e = await inspect();
-    ok(e.aoeNone && e.comboLink, 'Eleanor: AoE sem skill + link de Combos');
+    ok(!e.hasAoe && e.comboLink, 'Eleanor: AoE OCULTA (sem skill) + link de Combos');
     await selHomun(50); ok((await inspect()).summon, 'Sera: painel de Summon');
+
+    // papéis FIXOS (cura/buff do dono/castling) — só leitura, vindos do perfil/base
+    await selHomun(4); let v = await inspect();
+    ok(v.hasHealSelf && !v.hasCastling, 'Vanilmirth: mostra Cura própria e OCULTA Castling (não tem)');
+    ok(v.healSelfLines === 1, 'Vanilmirth: Cura própria mostra a skill fixa');
+    ok(v.roSkills >= 1 && v.roRm === 0, 'Vanilmirth: skill fixa é só leitura (sem ✕)');
+    ok(v.paramLinks >= 1, 'Vanilmirth: papéis fixos têm link ⚙ parâmetros (' + v.paramLinks + ')');
+    await selHomun(2);
+    { const a = await inspect(); ok(a.hasCastling && a.castlingLines === 1, 'Amistr: Castling aparece como skill fixa'); ok(!a.hasHealSelf, 'Amistr: Cura própria OCULTA (não tem)'); }
 
     ok(errors.length === 0, 'sem erros de console (' + errors.slice(0, 3).join(' | ') + ')');
   } finally {

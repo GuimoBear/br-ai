@@ -10,14 +10,29 @@ local function check(c, n) if c then pass = pass + 1; print("  ok  - " .. n)
 local function disp(m, o) return json.decode(SIM_DISPATCH(m, o and json.encode(o) or "")) end
 local function roleOf(rc, key) for _, r in ipairs(rc) do if r.key == key then return r end end end
 
-print("== roleConfig: sempre os 4 papéis ==")
+print("== roleConfig: sempre os 8 papéis (4 editáveis + 4 fixos) ==")
 BRAI.setSkillChoice({})   -- limpa qualquer escolha
 local rc = BRAI.roleConfig(C.DIETER)
-check(#rc == 4, "Dieter: 4 papéis (#" .. #rc .. ")")
+check(#rc == 8, "Dieter: 8 papéis (#" .. #rc .. ")")
 local keys = {}; for _, r in ipairs(rc) do keys[r.key] = true end
-check(keys.mainAtk and keys.aoeAtk and keys.offBuff and keys.defBuff, "papéis: mainAtk/aoeAtk/offBuff/defBuff")
+check(keys.mainAtk and keys.aoeAtk and keys.offBuff and keys.defBuff, "papéis editáveis: mainAtk/aoeAtk/offBuff/defBuff")
+check(keys.healSelf and keys.healOwner and keys.ownerBuff and keys.castling, "papéis fixos: healSelf/healOwner/ownerBuff/castling")
 for _, t in ipairs({ C.LIF, C.AMISTR, C.FILIR, C.VANILMIRTH, C.EIRA, C.BAYERI, C.ELEANOR, C.SERA }) do
-  check(#BRAI.roleConfig(t) == 4, "tipo " .. t .. ": 4 papéis")
+  check(#BRAI.roleConfig(t) == 8, "tipo " .. t .. ": 8 papéis")
+end
+
+print("== papéis FIXOS (cura/buff do dono/castling) resolvem do perfil/base ==")
+do
+  local hs = roleOf(BRAI.roleConfig(C.VANILMIRTH), "healSelf")
+  check(hs.fixed == true, "Vanilmirth healSelf marcado como fixo")
+  check(#hs.effective == 1 and hs.effective[1].name ~= "", "Vanilmirth healSelf: 1 skill fixa efetiva")
+  check(#roleOf(BRAI.roleConfig(C.AMISTR), "castling").effective == 1, "Amistr castling: 1 skill fixa efetiva")
+  -- Homunculus S herda do base: Dieter sem base não tem cura; com base Vanilmirth herda
+  check(#roleOf(BRAI.roleConfig(C.DIETER), "healSelf").effective == 0, "Dieter sem base: healSelf sem skill")
+  check(#roleOf(BRAI.roleConfig(C.DIETER, C.VANILMIRTH), "healSelf").effective == 1, "Dieter + base Vanilmirth: healSelf herdado")
+  -- papéis fixos NÃO entram no allSkillChoices (codegen)
+  local ac = BRAI.allSkillChoices(nil)
+  check(ac[tostring(C.VANILMIRTH)] and ac[tostring(C.VANILMIRTH)].healSelf == nil, "allSkillChoices NÃO serializa papéis fixos")
 end
 
 print("== papel sem skill → candidatos vazios ==")

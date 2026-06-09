@@ -787,7 +787,7 @@ function SIM_DISPATCH(method, argJson)
 		return json.encode({ ok = true })
 	elseif method == "roleConfig" then
 		-- candidatos + padrão + escolha por papel (p/ a tela "Skills por homúnculo")
-		return json.encode(BRAI.roleConfig(arg and arg.homunType or 0))
+		return json.encode(BRAI.roleConfig(arg and arg.homunType or 0, arg and arg.baseType or 0))
 	elseif method == "actionSkillsAll" then
 		-- skills efetivas + estado (ok|none|missing) das 8 ações automáticas, p/ o rótulo do nó
 		-- no editor (PLANO-SKILLS-NO-NO). bb sintético a partir de homunType/baseType do contexto.
@@ -809,7 +809,7 @@ function SIM_DISPATCH(method, argJson)
 		return json.encode({ ok = true })
 	elseif method == "paramConfig" then
 		-- knobs por papel (default global + valor atual) + skills efetivas p/ o modal de parametros
-		return json.encode(BRAI.paramConfig(arg and arg.homunType or 0, arg and arg.baseType or 0))
+		return json.encode(BRAI.paramConfig())
 	elseif method == "summonInfo" then
 		return json.encode(BRAI.summonInfo(arg and arg.homunType or 0))
 	elseif method == "setSummonChoice" then

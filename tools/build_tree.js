@@ -223,21 +223,14 @@ function generateSummonChoice(choices) {
 function generateSkillParams(params) {
   const src = (params && params.params) ? params.params : (params || {});
   const data = {};
-  Object.keys(src).forEach(function (k) {
-    const roles = src[k] || {}, r = {};
-    Object.keys(roles).forEach(function (role) {
-      const knobs = roles[role];
-      if (knobs && typeof knobs === 'object') {
-        const rr = {};
-        Object.keys(knobs).forEach(function (key) { const v = knobs[key]; if (typeof v === 'number' || typeof v === 'boolean') rr[key] = v; });
-        if (Object.keys(rr).length) r[role] = rr;
-      }
-    });
-    if (Object.keys(r).length) data[String(k)] = r;
+  Object.keys(src).forEach(function (role) {
+    const knobs = src[role] || {}, rr = {};
+    Object.keys(knobs).forEach(function (key) { const v = knobs[key]; if (typeof v === 'number' || typeof v === 'boolean') rr[key] = v; });
+    if (Object.keys(rr).length) data[role] = rr;
   });
   return [
     '-- skill_params.lua — GERADO por tools/build_tree.js. Nao editar a mao.',
-    '-- Parametros de skill por homunculo/papel (modal "Parametros das skills" do editor).',
+    '-- Parametros GLOBAIS das acoes de skill (modal "Parametros das skills" do editor).',
     'BRAI = BRAI or {}',
     '',
     'local params = ' + luaValue({ params: data }, 0),

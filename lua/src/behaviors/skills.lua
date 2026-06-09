@@ -33,7 +33,7 @@ end
 -- (aoeAtk/mainAtk/offBuff/defBuff/healSelf/healOwner/ownerBuff/castling). [PLANO-GERACAO-LUA #4 / PLANO-CONFIG-SKILLS C0]
 local function effRole(p, bb, role, key)
 	if p and p[key] ~= nil then return p[key] end
-	local v = BRAI.skillParamFor and BRAI.skillParamFor(bb.self.homunType, role, key)
+	local v = BRAI.skillParamFor and BRAI.skillParamFor(role, key)
 	if v ~= nil then return v end
 	return bb.config[key]
 end

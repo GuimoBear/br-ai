@@ -109,7 +109,7 @@ const catalog = { monsters: [{ id: 1002, desc: 'Poring' }], groups: [{ id: 1, na
     tree: JSON.stringify({ name: 'T', homunType: 51, spec: simpleSpec }),
     skills: '{"choices":{"51":{"aoeAtk":[8044]}}}',
     monsters: '{"monsters":[{"id":1002}],"groups":[]}',
-    skillParams: '{"params":{"51":{"aoeAtk":{"AutoMobCount":1}}}}',
+    skillParams: '{"params":{"aoeAtk":{"AutoMobCount":1}}}',
   };
   // sem monsterCheck: tree.json + homun_skills.json presentes; monsters.json OMITIDO
   {
@@ -138,7 +138,7 @@ const catalog = { monsters: [{ id: 1002, desc: 'Poring' }], groups: [{ id: 1, na
 
 // --- C2: skill_params.lua (parâmetros por homún/papel) no zip + conteúdo + paridade ---
 {
-  const skillParams = { params: { '51': { aoeAtk: { AutoMobCount: 1, AoEMaximizeTargets: true } } } };
+  const skillParams = { params: { aoeAtk: { AutoMobCount: 1, AoEMaximizeTargets: true } } };
   const { root, res, safe } = build({ name: 'Teste C2', spec: simpleSpec, skillParams: skillParams,
     sourceJson: { tree: '{}', skills: '{"choices":{}}', skillParams: JSON.stringify(skillParams) } });
   const sp = srcFile(root, safe, 'skill_params.lua');
@@ -146,11 +146,11 @@ const catalog = { monsters: [{ id: 1002, desc: 'Poring' }], groups: [{ id: 1, na
   ok(zipHasEntry(res.zipPath, 'brai/lua/src/skill_params.lua'), 'C2: skill_params.lua no zip');
   const txt = fs.readFileSync(sp, 'utf8');
   ok(lint(txt).ok, 'C2: skill_params.lua sintaxe válida');
-  ok(txt.includes('["51"]') && txt.includes('AutoMobCount') && txt.includes('AoEMaximizeTargets'), 'C2: skill_params.lua traz Dieter aoeAtk knobs');
+  ok(txt.includes('aoeAtk') && txt.includes('AutoMobCount') && txt.includes('AoEMaximizeTargets'), 'C2: skill_params.lua traz aoeAtk knobs (global)');
   ok(txt.includes('BRAI.setSkillParams'), 'C2: skill_params.lua chama setSkillParams');
   // source re-importável
   const sdir = path.join(root, 'trees', safe, 'dist', 'source');
-  ok(JSON.parse(fs.readFileSync(path.join(sdir, 'homun_skill_params.json'), 'utf8')).params['51'].aoeAtk.AutoMobCount === 1, 'C2: source/homun_skill_params.json re-importável');
+  ok(JSON.parse(fs.readFileSync(path.join(sdir, 'homun_skill_params.json'), 'utf8')).params.aoeAtk.AutoMobCount === 1, 'C2: source/homun_skill_params.json re-importável');
   fs.rmSync(root, { recursive: true, force: true });
   // paridade node<->web de generateSkillParams
   const bn = buildTree.generateSkillParams(skillParams), wn = buildTreeWeb.generateSkillParams(skillParams);

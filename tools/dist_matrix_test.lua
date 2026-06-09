@@ -42,7 +42,7 @@ local function distCast(homun, layout, role, cfg, choices, steps)
   disp("loadDist", { scenario = scen(homun, layout), config = cfg, choices = choices, spec = treeFor(role) })
   return collect(steps)
 end
--- C1: variantes com skillParams (por homún/papel) + params de nó opcionais
+-- C1: variantes com skillParams GLOBAIS (por papel) + params de nó opcionais
 local function treeForP(role, params)
   local act = { type = "action", name = ACTION[role], params = params }
   if role == "mainAtk" or role == "aoeAtk" then
@@ -143,19 +143,17 @@ do
   check(b[S.MH_GOLDENE_FERSE] and b[S.MH_ANGRIFFS_MODUS], "offBuff: Bayeri mantem TODAS do perfil (Golden Ferse + Angriff Modus)")
 end
 
-print("== Paridade dist<->live com skillParams (C1) ==")
+print("== Paridade dist<->live com skillParams GLOBAIS (C1) ==")
 do
-  local spD = { params = { [tostring(C.DIETER)] = { aoeAtk = { AutoMobCount = 1 } } } }
-  local spB = { params = { [tostring(C.BAYERI)] = { aoeAtk = { AutoMobCount = 1 } } } }
-  local spOff = { params = { [tostring(C.DIETER)] = { aoeAtk = { UseAttackSkill = false } } } }
-  local spVan = { params = { [tostring(C.VANILMIRTH)] = { mainAtk = { AttackRange = 3 } } } }
+  local spAMC = { params = { aoeAtk = { AutoMobCount = 1 } } }       -- GLOBAL: vale p/ todos
+  local spOff = { params = { aoeAtk = { UseAttackSkill = false } } } -- GLOBAL
+  local spVan = { params = { mainAtk = { AttackRange = 3 } } }       -- GLOBAL
   local PROBES = {
-    { C.DIETER, "aoeAtk", "single", spD, nil },
-    { C.BAYERI, "aoeAtk", "single", spD, nil },                 -- Bayeri NÃO afetado (spD só do Dieter)
-    { C.BAYERI, "aoeAtk", "single", spB, nil },
-    { C.BAYERI, "aoeAtk", "single", spB, { AutoMobCount = 5 } },  -- nó vence homún
+    { C.DIETER, "aoeAtk", "single", spAMC, nil },
+    { C.BAYERI, "aoeAtk", "single", spAMC, nil },                  -- global afeta TODOS os homúns
+    { C.BAYERI, "aoeAtk", "single", spAMC, { AutoMobCount = 5 } },  -- nó vence o global
     { C.DIETER, "aoeAtk", "cluster", spOff, nil },
-    { C.BAYERI, "aoeAtk", "cluster", spB, nil },
+    { C.BAYERI, "aoeAtk", "cluster", spAMC, nil },
     { C.VANILMIRTH, "mainAtk", "single", spVan, nil },
   }
   for _, pr in ipairs(PROBES) do
@@ -163,9 +161,10 @@ do
     local l = liveCastSP(pr[1], pr[3], pr[2], pr[4], pr[5])
     check(castStr(d) == castStr(l), HN[pr[1]] .. "/" .. pr[2] .. "/" .. pr[3] .. " [skillParams]: dist==live {" .. castStr(d) .. "}")
   end
-  -- comportamento por homún (absoluto, via dist): MESMA árvore + MESMO skillParams
-  check(distCastSP(C.DIETER, "single", "aoeAtk", spD)[S.MH_LAVA_SLIDE], "skillParams por homún: Dieter aoeAtk AutoMobCount=1 -> dispara em 1 alvo")
-  check(not distCastSP(C.BAYERI, "single", "aoeAtk", spD)[S.MH_HEILIGE_STANGE], "MESMA árvore: Bayeri (não-config) -> segura em 1 alvo")
+  -- GLOBAL (absoluto, via dist): a MESMA config vale p/ TODOS os homúns
+  check(distCastSP(C.BAYERI, "single", "aoeAtk", spAMC)[S.MH_HEILIGE_STANGE], "skillParams global AutoMobCount=1 -> Bayeri dispara em 1 alvo")
+  check(not distCastSP(C.BAYERI, "single", "aoeAtk", {})[S.MH_HEILIGE_STANGE], "sem config (global=2) -> Bayeri segura em 1 alvo")
+  check(not distCastSP(C.BAYERI, "single", "aoeAtk", spAMC, { AutoMobCount = 5 })[S.MH_HEILIGE_STANGE], "nó AutoMobCount=5 vence o global=1 -> segura")
   -- retrocompat: skillParams vazio == dist sem skillParams (matriz padrão)
   check(castStr(distCastSP(C.DIETER, "single", "aoeAtk", {})) == castStr(distCast(C.DIETER, "single", "aoeAtk", {}, nil)),
     "retrocompat: dist skillParams{} == dist sem skillParams")

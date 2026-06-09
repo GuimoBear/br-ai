@@ -104,25 +104,44 @@ function BRAI.comboChoiceFor(homunType)
 	return (ch and ch.combo) or {}
 end
 
--- Papeis configuraveis na tela (os 4 citados: main, AoE, buff ofensivo, buff defensivo).
+-- Papeis da tela "Skills por homunculo": 4 EDITAVEIS (escolha de skill) + 4 FIXOS (cura/buff do
+-- dono/castling, so leitura, vindos do perfil/base) — casa com os 8 papeis do modal de Parametros.
 local ROLES = {
 	{ key = "mainAtk", single = true },
 	{ key = "aoeAtk",  single = true },
 	{ key = "offBuff", single = false },
 	{ key = "defBuff", single = false },
+	{ key = "healSelf",  single = true,  fixed = true },
+	{ key = "healOwner", single = true,  fixed = true },
+	{ key = "ownerBuff", single = false, fixed = true },
+	{ key = "castling",  single = true,  fixed = true },
 }
 
--- roleConfig(homunType): dados p/ a tela "Skills por homunculo" (1 dispatch).
+-- Skill unica de cura/ownerBuff/castling de um perfil (MESMA regra de paramConfig/action_skills).
+local function roleSkillOf(pr, role)
+	if role == "healSelf" then if pr.healSelf and pr.heal then return pr.heal end
+	elseif role == "healOwner" then if pr.healOwner and pr.heal then return pr.heal end
+	elseif role == "ownerBuff" then return pr.ownerBuff
+	elseif role == "castling" then return pr.castling end
+	return nil
+end
+
+-- roleConfig(homunType[, baseType]): dados p/ a tela "Skills por homunculo" (1 dispatch). 8 papeis;
+-- os fixos resolvem a skill propria ou herdada do tipo base (Homunculus S).
 -- Por papel: candidatos (skills DESTE tipo nesse papel), o padrao (do perfil) e a escolha atual.
-function BRAI.roleConfig(homunType)
+function BRAI.roleConfig(homunType, baseType)
 	homunType = tonumber(homunType) or 0
+	baseType = tonumber(baseType) or 0
 	local prof = BRAI.getProfile(homunType) or {}
-	local cat = BRAI.skillCatalog(homunType, 0)
-	local byRole, descById, maxById, nameById = {}, {}, {}, {}
+	-- forma base do Homunculus S (cura/ownerBuff/castling herdam dela), como em profileFor
+	local base = (baseType ~= 0 and baseType ~= homunType and BRAI.getProfile and BRAI.getProfile(baseType)) or nil
+	local cat = BRAI.skillCatalog(homunType, baseType)
+	local byRole, descById, maxById, nameById, catById = {}, {}, {}, {}, {}
 	for _, s in ipairs(cat) do
 		descById[s.id] = s.desc or ""
 		maxById[s.id] = s.maxLevel or 1
 		nameById[s.id] = s.iro
+		catById[s.id] = s
 		if s.role then
 			byRole[s.role] = byRole[s.role] or {}
 			local b = byRole[s.role]
@@ -134,8 +153,23 @@ function BRAI.roleConfig(homunType)
 	end
 	local ch = BRAI.skillChoice[homunType] or {}
 	local lvls = ch.levels or {}
+	-- monta a entrada de UMA skill (com os campos do card on-hover) a partir do catalogo
+	local function catEntry(id)
+		local s = catById[id]
+		if not s then return { id = id, name = nameById[id] or ("#" .. id), iro = nameById[id] or ("#" .. id), desc = descById[id] or "", maxLevel = maxById[id] or 1, level = 0 } end
+		return { id = id, name = s.iro, iro = s.iro, desc = s.desc or "", maxLevel = s.maxLevel or 1, level = 0,
+			cat = s.cat, target = s.target, sp = s.sp, range = s.range, area = s.area,
+			fixedCast = s.fixedCast, varCast = s.varCast, delay = s.delay, reuse = s.reuse,
+			duration = s.duration, effect = s.effect }
+	end
 	local out = {}
 	for _, r in ipairs(ROLES) do
+		if r.fixed then
+			-- papel FIXO (cura/buff do dono/castling): skill propria ou herdada do base; so leitura
+			local id = roleSkillOf(prof, r.key) or (base and roleSkillOf(base, r.key))
+			local eff = id and { catEntry(id) } or {}
+			out[#out + 1] = { key = r.key, fixed = true, candidates = eff, defaultIds = (id and { id } or {}), defaultDescs = {}, chosen = 0, overridden = false, level = 0, effectiveMaxLevel = (id and (maxById[id] or 1)) or 1, effective = eff }
+		else
 		local cands = byRole[r.key] or {}
 		local defIds, defDescs = {}, {}
 		local pv = prof[r.key]   -- aceita LISTA (vários padrões) OU id único (qualquer papel)
@@ -166,6 +200,7 @@ function BRAI.roleConfig(homunType)
 			effectiveMaxLevel = maxById[effId] or 1,
 			effective = effective,           -- M4: skills ativas (perfil/override) + nível por skill (UI)
 		}
+		end
 	end
 	return out
 end
@@ -193,8 +228,8 @@ function BRAI.allSkillChoices(raw)
 				if e.level and e.level > 0 then skillLevels[e.id] = e.level end
 			end
 			-- exporta a lista quando ha skills OU quando o usuario sobrescreveu (incl. lista vazia)
-			if #ids > 0 or role.overridden then entry[role.key] = ids end
-			if role.level and role.level > 0 then entry[role.key .. "Level"] = role.level end
+			if (not role.fixed) and (#ids > 0 or role.overridden) then entry[role.key] = ids end
+			if (not role.fixed) and role.level and role.level > 0 then entry[role.key .. "Level"] = role.level end
 		end
 		if next(skillLevels) then entry.skillLevels = skillLevels end
 		local combo = BRAI.comboChoiceFor(t)

@@ -1,6 +1,7 @@
-// skillparams_smoke.js — smoke (Playwright) do modal #spModal (C4):
-//  - 8 seções por papel; skill em destaque; knob number + booleano tri-estado;
-//  - editar grava no JSON (skillParamsIO); "herdar" remove; persiste ao reabrir; export.
+// skillparams_smoke.js — smoke (Playwright) do modal GLOBAL #spModal:
+//  - 8 seções por papel (AÇÃO); SEM seletor de homúnculo; SEM combo "herdar".
+//  - knob number + booleano sim/não; editar grava no JSON GLOBAL por papel
+//    (skillParamsIO, sem dimensão de homúnculo); persiste ao reabrir; export/import.
 'use strict';
 const fs = require('fs'), os = require('os'), path = require('path'), http = require('http');
 const ROOT = path.join(__dirname, '..');
@@ -26,47 +27,46 @@ async function main() {
 
     await pg.click('#btnSkillParams');
     await pg.waitForSelector('#spModal', { timeout: 8000 });
-    await pg.selectOption('#spModal #spHomunSel', '51');   // Dieter
     await pg.waitForTimeout(300);
 
-    ok((await pg.locator('#spModal .sp-row').count()) === 8, 'modal: 8 seções de papel');
-    ok(/Lava Slide/.test(await pg.locator('#spModal .sp-row').first().innerText()), 'aoeAtk mostra a skill em destaque (Lava Slide)');
-    // C5: card rico (skillInfoHtml) com Alcance/SP/Cast
-    ok((await pg.locator('#spModal .sp-row .skillinfo').count()) >= 1, 'C5: card rico (skillinfo) presente');
-    ok(/Alcance|SP|Cast|Recarga/.test(await pg.locator('#spModal .sp-row').first().innerText()), 'C5: card mostra dados (Alcance/SP/Cast/...)');
+    // GLOBAL: sem seletor de homúnculo, sem cards de skill por homún
+    ok((await pg.locator('#spModal #spHomunSel').count()) === 0, 'modal GLOBAL: sem seletor de homúnculo');
+    ok((await pg.locator('#spModal .sp-row').count()) === 8, 'modal: 8 seções de papel (ação)');
+    ok((await pg.locator('#spModal .sp-row[data-role="aoeAtk"]').count()) === 1, 'tem o papel aoeAtk');
+    ok((await pg.locator('#spModal .sp-row[data-role="castling"]').count()) === 1, 'tem o papel castling');
+    ok((await pg.locator('#spModal .sp-desc').count()) >= 8, 'cada papel mostra a descrição da ação');
 
-    // knob number AutoMobCount (aoeAtk) -> 1 -> grava
+    // knob number AutoMobCount (aoeAtk) -> 1 -> grava GLOBAL (params.aoeAtk, sem chave de homún)
     const amc = pg.locator('#spModal .spKnob[data-role="aoeAtk"][data-key="AutoMobCount"]');
     ok((await amc.count()) === 1, 'knob number AutoMobCount (aoeAtk) presente');
     await amc.fill('1'); await amc.dispatchEvent('change'); await pg.waitForTimeout(300);
     let j = await loadJson();
-    ok(j.params['51'] && j.params['51'].aoeAtk && j.params['51'].aoeAtk.AutoMobCount === 1, 'editar AutoMobCount=1 grava no JSON');
+    ok(j.params.aoeAtk && j.params.aoeAtk.AutoMobCount === 1, 'editar AutoMobCount=1 grava em params.aoeAtk (global)');
+    ok(!('51' in j.params) && !('4' in j.params) && !('50' in j.params), 'JSON não tem mais dimensão por homúnculo');
 
-    // booleano tri-estado UseAttackSkill -> "não" (false)
+    // booleano sim/não (SEM "herdar")
     const uas = pg.locator('#spModal .spKnob[data-role="aoeAtk"][data-key="UseAttackSkill"]');
-    ok((await uas.count()) === 1 && (await uas.evaluate(e => e.tagName)) === 'SELECT', 'UseAttackSkill é booleano tri-estado (select)');
+    ok((await uas.count()) === 1 && (await uas.evaluate(e => e.tagName)) === 'SELECT', 'UseAttackSkill é booleano (select)');
+    const opts = await uas.evaluate(e => Array.from(e.options).map(x => x.value));
+    ok(opts.length === 2 && opts.indexOf('true') >= 0 && opts.indexOf('false') >= 0 && opts.indexOf('') < 0, 'booleano só tem sim/não (sem opção "herdar")');
     await uas.selectOption('false'); await pg.waitForTimeout(300);
     j = await loadJson();
-    ok(j.params['51'].aoeAtk.UseAttackSkill === false, 'booleano "não" grava false');
+    ok(j.params.aoeAtk.UseAttackSkill === false, 'booleano "não" grava false (global)');
 
-    // herdar: limpar AutoMobCount remove do JSON
+    // limpar número remove a chave do JSON
     await amc.fill(''); await amc.dispatchEvent('change'); await pg.waitForTimeout(300);
     j = await loadJson();
-    ok(!(j.params['51'] && j.params['51'].aoeAtk && ('AutoMobCount' in j.params['51'].aoeAtk)), 'limpar = herdar (remove do JSON)');
+    ok(!(j.params.aoeAtk && ('AutoMobCount' in j.params.aoeAtk)), 'limpar número remove a chave do JSON');
+
+    // cura/castling continuam configuráveis aqui (os 8 papéis)
+    ok((await pg.locator('#spModal .spKnob[data-role="healSelf"][data-key="HealSelfHP"]').count()) === 1, 'papel healSelf tem HealSelfHP');
+    ok((await pg.locator('#spModal .spKnob[data-role="healOwner"][data-key="HealOwnerHP"]').count()) === 1, 'papel healOwner tem HealOwnerHP');
+    ok((await pg.locator('#spModal .spKnob[data-role="castling"][data-key="CastleDefendThreshold"]').count()) === 1, 'papel castling tem CastleDefendThreshold');
 
     // persiste ao reabrir
     await pg.evaluate(() => { const m = document.getElementById('spModal'); if (m) m.remove(); });
-    await pg.click('#btnSkillParams'); await pg.waitForSelector('#spModal');
-    await pg.selectOption('#spModal #spHomunSel', '51'); await pg.waitForTimeout(300);
+    await pg.click('#btnSkillParams'); await pg.waitForSelector('#spModal'); await pg.waitForTimeout(300);
     ok((await pg.locator('#spModal .spKnob[data-role="aoeAtk"][data-key="UseAttackSkill"]').inputValue()) === 'false', 'reabrir: UseAttackSkill="não" persistiu');
-
-    // papel de cura (Vanilmirth healSelf -> HealSelfHP)
-    await pg.selectOption('#spModal #spHomunSel', '4'); await pg.waitForTimeout(300);
-    ok((await pg.locator('#spModal .spKnob[data-role="healSelf"][data-key="HealSelfHP"]').count()) === 1, 'Vanilmirth: papel healSelf tem HealSelfHP');
-    ok(/Caprice/.test(await pg.locator('#spModal').innerText()), 'C5: trocar homún atualiza o card (Vanilmirth → Caprice)');
-    // C7: Homunculus S mostra a nota da forma base
-    await pg.selectOption('#spModal #spHomunSel', '50'); await pg.waitForTimeout(300);
-    ok((await pg.locator('#spModal .sp-basenote').count()) === 1, 'C7: Homunculus S (Sera) mostra nota da forma base');
 
     ok((await pg.locator('#spExport').count()) === 1 && (await pg.locator('#spImport').count()) === 1, 'tem botões exportar/importar parâmetros');
     ok(errs.length === 0, 'sem erros de página (' + errs.slice(0, 2).join(' | ') + ')');

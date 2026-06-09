@@ -74,12 +74,12 @@ async function main() {
     // Skills modal (ESTÁTICO): importar/exportar logo abaixo do título
     await page.waitForFunction(() => { const b = document.getElementById('btnSkills'); return !!(b && b.onclick); }, null, { timeout: 30000 });
     await page.click('#btnSkills');
-    await page.waitForFunction(() => document.querySelectorAll('#scModal .sc-rows .sc-row').length === 4, null, { timeout: 20000 });
+    await page.waitForFunction(() => !!document.querySelector('#scModal .sc-rows[data-homun]'), null, { timeout: 20000 });
     ok(await page.evaluate(() => !!document.getElementById('scExport') && !!document.getElementById('scImport')), 'editor estático: exportar/importar skills no modal');
     ok(await page.evaluate(() => { const io = document.querySelector('#scModal .sc-io'); const body = io && io.parentElement; return !!io && body && body.firstElementChild === io; }), 'barra import/export é o 1º elemento do corpo (logo abaixo do título)');
     // importar uma config (Dieter aoeAtk = [Blast Forge 8044]) → aplica (1 skill na AoE)
     await page.selectOption('#scModal #scHomunSel', '51');
-    await page.waitForFunction(() => document.querySelectorAll('#scModal .sc-rows .sc-row').length === 4, null, { timeout: 10000 });
+    await page.waitForFunction(() => !!document.querySelector('#scModal .sc-rows[data-homun="51"]'), null, { timeout: 10000 });
     await page.setInputFiles('#scModal #scImportFile', { name: 'minhas-skills.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify({ choices: { '51': { aoeAtk: [8044] } } })) });
     await page.waitForFunction(() => document.querySelectorAll('#scModal .sc-skills[data-role="aoeAtk"] .sc-skill').length === 1, null, { timeout: 10000 });
     ok(true, 'importar skills aplica a config (Dieter AoE = 1 skill)');

@@ -15,6 +15,18 @@ const SMALL = { type: 'selector', label: 'root', children: [{ type: 'action', na
 function findByType(s, t) { if (s.type === t) return s; for (const c of (s.children || [])) { const r = findByType(c, t); if (r) return r; } if (s.child) { const r = findByType(s.child, t); if (r) return r; } return null; }
 const names = s => (s.children || []).map(c => c.name || c.label || c.type);
 const topDots = pg => pg.evaluate(() => { const ds = [...document.querySelectorAll('.linkh')].map(e => { const r = e.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; }); const ymin = Math.min(...ds.map(d => d.y)); return ds.filter(d => d.y < ymin + 8).sort((a, b) => a.x - b.x); });
+// Espera o layout do grafo ASSENTAR com exatamente `n` pontos no topo (largura != 0) e os devolve.
+// Leitura ATÔMICA (o mesmo tick que satisfaz a condição é o retornado) — elimina a corrida de
+// 'esperar >=4 .linkh, depois ler' que tornava o teste flaky (posições ainda em 0 -> ymin errado).
+const topDotsStable = (pg, n) => pg.waitForFunction((n) => {
+  const els = [...document.querySelectorAll('.linkh')];
+  if (els.length < 4) return null;
+  const ds = els.map(e => { const r = e.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2, w: r.width }; });
+  if (ds.some(d => d.w === 0)) return null;            // ainda posicionando
+  const ymin = Math.min(...ds.map(d => d.y));
+  const top = ds.filter(d => d.y < ymin + 8).sort((a, b) => a.x - b.x);
+  return top.length === n ? top.map(d => ({ x: d.x, y: d.y })) : null;
+}, n, { timeout: 8000 }).then(h => h.jsonValue());
 async function main() {
   let chromium; try { ({ chromium } = require('playwright')); } catch (e) { console.log('SKIP: playwright'); process.exit(0); }
   const { build } = require(path.join(ROOT, 'tools', 'build_static.js'));
@@ -28,27 +40,31 @@ async function main() {
     await pg.waitForFunction(() => window.BRAI_EDITOR && window.BRAI_EDITOR.load, null, { timeout: 30000 });
     // reordenar
     await pg.evaluate(sp => window.BRAI_EDITOR.load(sp), SMALL);
-    await pg.waitForFunction(() => document.querySelectorAll('.linkh').length >= 4, null, { timeout: 8000 });
-    let dots = await topDots(pg);
+    let dots = await topDotsStable(pg, 3);   // espera o layout assentar (3 pontos no topo) e lê atomicamente
     ok(dots.length === 3, 'raiz com 3 pontos');
     await pg.mouse.move(dots[0].x, dots[0].y); await pg.mouse.down();
-    await pg.mouse.move(dots[2].x + 30, dots[0].y, { steps: 6 }); await pg.waitForTimeout(120);
+    await pg.mouse.move(dots[2].x + 30, dots[0].y, { steps: 8 });
+    // espera o ponto-fantasma + a aresta viva aparecerem (condição, não sleep fixo)
+    await pg.waitForFunction(() => { const g = document.querySelector('.linkh-preview.ghost-dot'); return !!g && getComputedStyle(g).display !== 'none' && document.querySelectorAll('.live-edge').length > 0; }, null, { timeout: 3000 }).catch(() => {});
     ok(await pg.evaluate(() => { const g = document.querySelector('.linkh-preview.ghost-dot'); return !!g && getComputedStyle(g).display !== 'none'; }), 'reordenar: ponto-fantasma visível');
     ok(await pg.evaluate(() => document.querySelectorAll('.live-edge').length > 0), 'reordenar: aresta viva');
-    await pg.mouse.up(); await pg.waitForTimeout(120);
+    await pg.mouse.up();
+    await pg.waitForFunction(() => { const n = (window.BRAI_EDITOR.spec().children || []).map(c => c.name || c.label || c.type); return n.length === 3 && n[0] !== 'Idle'; }, null, { timeout: 3000 }).catch(() => {});
     const r1 = await pg.evaluate(() => window.BRAI_EDITOR.spec());
     ok(names(r1)[0] !== 'Idle' && names(r1).length === 3, 'reordenar: ordem mudou, 3 filhos');
     // trocar de pai
     await pg.evaluate(sp => window.BRAI_EDITOR.load(sp), SMALL);
-    await pg.waitForFunction(() => document.querySelectorAll('.linkh').length >= 4, null, { timeout: 8000 });
-    dots = await topDots(pg);
+    dots = await topDotsStable(pg, 3);
     const seq = await pg.evaluate(() => { for (const n of document.querySelectorAll('.gnode')) { if (/SEQU/i.test((n.querySelector('.type') || {}).textContent || '')) { const r = n.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; } } return null; });
     ok(!!seq, 'achou nó sequence (alvo)');
     await pg.mouse.move(dots[0].x, dots[0].y); await pg.mouse.down();
-    await pg.mouse.move((dots[0].x + seq.x) / 2, (dots[0].y + seq.y) / 2, { steps: 4 });
-    await pg.mouse.move(seq.x, seq.y, { steps: 6 }); await pg.waitForTimeout(150);
+    await pg.mouse.move((dots[0].x + seq.x) / 2, (dots[0].y + seq.y) / 2, { steps: 6 });
+    await pg.mouse.move(seq.x, seq.y, { steps: 8 });
+    // espera o alvo acender (.reparent-ok) — condição, não sleep fixo
+    await pg.waitForFunction(() => document.querySelectorAll('.gnode.reparent-ok').length > 0, null, { timeout: 3000 }).catch(() => {});
     ok(await pg.evaluate(() => document.querySelectorAll('.gnode.reparent-ok').length > 0), 'reparentar: alvo acende (.reparent-ok)');
-    await pg.mouse.up(); await pg.waitForTimeout(150);
+    await pg.mouse.up();
+    await pg.waitForFunction(() => (window.BRAI_EDITOR.spec().children || []).length === 2, null, { timeout: 3000 }).catch(() => {});
     const r2 = await pg.evaluate(() => window.BRAI_EDITOR.spec());
     ok(names(r2).length === 2, 'reparentar: raiz ficou com 2 filhos');
     const sq = findByType(r2, 'sequence');

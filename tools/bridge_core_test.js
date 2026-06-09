@@ -131,7 +131,7 @@ function mkTarget(backend) {
     }
     // sem monsterCheck -> monsters.lua omitido; skill_choice traz os 9 homuns (allSkillChoices via host)
     {
-      const b = mkBackend({ host: host, fs: { 'monsters.json': '{"monsters":[],"groups":[]}', 'homun_skills.json': '{"choices":{}}', 'homun_summons.json': '{"choices":{}}', 'homun_skill_params.json': '{"params":{"51":{"aoeAtk":{"AutoMobCount":1}}}}' } });
+      const b = mkBackend({ host: host, fs: { 'monsters.json': '{"monsters":[],"groups":[]}', 'homun_skills.json': '{"choices":{}}', 'homun_summons.json': '{"choices":{}}', 'homun_skill_params.json': '{"params":{"aoeAtk":{"AutoMobCount":1}}}' } });
       const t = realTarget(b);
       const r = await t.trees.build('WebA', JSON.stringify({ spec: { type: 'selector', children: [{ type: 'action', name: 'AcquireTarget' }] }, homunType: 51 }));
       ok(r.ok === true, 'web build (sem monsterCheck) ok');
@@ -145,7 +145,7 @@ function mkTarget(backend) {
       ok(b._zipEntries.some(function (e) { return e.name === 'brai/lua/src/skill_params.lua'; }), 'web C2: skill_params.lua no zip');
       ok(b._zipEntries.some(function (e) { return e.name === 'source/homun_skill_params.json'; }), 'web C2: source/homun_skill_params.json no zip');
       const spArt = b._artifacts.find(function (a) { return a.rel === 'trees/WebA/skill_params.lua'; });
-      ok(spArt && /AutoMobCount/.test(spArt.data) && /\["51"\]/.test(spArt.data), 'web C2: skill_params.lua traz os knobs do Dieter (51)');
+      ok(spArt && /AutoMobCount/.test(spArt.data) && /aoeAtk/.test(spArt.data), 'web C2: skill_params.lua traz os knobs globais (aoeAtk)');
       ok(!b._zipEntries.some(function (e) { return e.name === 'source/monsters.json'; }), 'web #6: source/monsters.json OMITIDO sem monsterCheck');
     }
     // com monsterCheck -> monsters.lua presente (espelha installer.js)

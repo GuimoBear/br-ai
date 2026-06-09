@@ -60,18 +60,18 @@ async function main() {
 
     // ===== SIMULADOR: aplica skillParams do localStorage no boot =====
     await pg.goto('http://localhost:8143/sim.html', { waitUntil: 'load' });
-    await pg.evaluate(() => localStorage.setItem('brai.skillparams', JSON.stringify({ params: { '51': { aoeAtk: { AutoMobCount: 1 } } } })));
+    await pg.evaluate(() => localStorage.setItem('brai.skillparams', JSON.stringify({ params: { aoeAtk: { AutoMobCount: 1 } } })));
     await pg.reload({ waitUntil: 'load' });
     await pg.waitForFunction(() => window.brai && typeof window.brai.dispatch === 'function', null, { timeout: 30000 });
     await pg.waitForTimeout(500);
     const pcVal = await pg.evaluate(async () => {
-      const r = await window.brai.dispatch('paramConfig', JSON.stringify({ homunType: 51 }));
+      const r = await window.brai.dispatch('paramConfig', '');
       const pc = JSON.parse(r.data);
       const aoe = pc.find(x => x.role === 'aoeAtk');
       const k = aoe.knobs.find(x => x.key === 'AutoMobCount');
       return k ? k.value : null;
     });
-    ok(pcVal === 1, 'simulador: loadSkillParams aplicou (paramConfig AutoMobCount.value=1) [' + pcVal + ']');
+    ok(pcVal === 1, 'simulador: loadSkillParams global aplicou (paramConfig AutoMobCount.value=1) [' + pcVal + ']');
 
     ok(errs.length === 0, 'sem erros de página (' + errs.slice(0, 2).join(' | ') + ')');
   } finally { if (browser) await browser.close(); s.close(); }
