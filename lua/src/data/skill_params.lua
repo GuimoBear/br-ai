@@ -1,9 +1,9 @@
--- skill_params.lua — parâmetros GLOBAIS das ações de skill (knobs como AutoMobCount, AoEFixedLevel,
--- HealSelfHP, ...) por PAPEL (ação). Os valores valem para TODOS os homúnculos que têm o papel.
--- É a ÚNICA fonte da verdade da UI: não há mais dimensão por homúnculo nem opção "herdar".
--- Camada única entre o override por nó (#4) e o config.lua global:
---   param do nó > skillParams[role][knob] (este modal) > bb.config[knob] > default do motor.
--- Persistido em homun_skill_params.json -> skill_params.lua no pacote.
+-- skill_params.lua — parâmetros das ações de skill (knobs como AutoMobCount, AoEFixedLevel,
+-- HealSelfHP, ...) por PAPEL (ação), em DUAS camadas:
+--   * global   : a base, válida para TODOS os homúnculos (modal "Parâmetros das skills").
+--   * byHomun  : override OPCIONAL por homúnculo (modal "Skills por homúnculo", via checkbox).
+-- Precedência no motor: param do nó > byHomun[homun][role][knob] > global[role][knob] > config.lua > default.
+-- Persistido em homun_skill_params.json ({ params = global, overrides = byHomun }) -> skill_params.lua no pacote.
 BRAI = BRAI or {}
 
 -- contrato dos knobs por papel (fonte da verdade p/ motor, validação e UI). Ordem = ordem na UI.
@@ -26,7 +26,7 @@ BRAI.skillParamRoleLabel = {
   healSelf = "Cura própria", healOwner = "Cura do dono",
   ownerBuff = "Buff no dono", castling = "Castling",
 }
--- descrição curta da AÇÃO (o modal é global por ação; não mostra mais a skill específica de um homún)
+-- descrição curta da AÇÃO (o modal de Parâmetros é global por ação)
 BRAI.skillParamRoleDesc = {
   aoeAtk    = "Skill ofensiva de área, usada quando há aglomerado de alvos.",
   mainAtk   = "Skill ofensiva de alvo único, usada no alvo principal.",
@@ -38,7 +38,7 @@ BRAI.skillParamRoleDesc = {
   castling  = "Reposiciona o dono/si para tirar o dono do aperto.",
 }
 
-BRAI.skillParams = BRAI.skillParams or {}
+BRAI.skillParams = BRAI.skillParams or { global = {}, byHomun = {} }
 
 -- lookup rápido knob->tipo por papel (derivado de skillParamKnobs)
 local KNOB_TYPE = {}
@@ -47,24 +47,44 @@ for role, list in pairs(BRAI.skillParamKnobs) do
   for _, k in ipairs(list) do KNOB_TYPE[role][k.key] = k.type end
 end
 
--- aplica/valida o JSON GLOBAL. Aceita { params = { aoeAtk = { AutoMobCount = 1 } } } ou o mapa direto.
--- papel/knob fora do contrato é DESCARTADO; number via tonumber; boolean só aceita boolean.
--- O formato antigo por-homúnculo ({ ["51"] = { aoeAtk = {...} } }) tem chaves numéricas que não
--- casam KNOB_TYPE e são descartadas (retrocompat: vira "sem parâmetros").
+-- valida um mapa knob=valor de UM papel (number via tonumber; boolean só boolean; fora do contrato descarta)
+local function parseKnobs(role, knobs)
+  local rr = {}
+  for key, v in pairs(knobs) do
+    local ty = KNOB_TYPE[role][key]
+    if ty == "number" then local n = tonumber(v); if n then rr[key] = n end
+    elseif ty == "boolean" then if type(v) == "boolean" then rr[key] = v end end
+  end
+  return rr
+end
+
+-- aplica/valida o JSON. Aceita { params|global = { aoeAtk = {...} }, overrides|byHomun = { ["51"] = { aoeAtk = {...} } } }.
+-- Retrocompat: JSON só com `params` (global) carrega como global, sem overrides.
 function BRAI.setSkillParams(tbl)
-  local out = {}
+  local out = { global = {}, byHomun = {} }
   if type(tbl) == "table" then
-    local src = tbl.params or tbl
-    if type(src) == "table" then
-      for role, knobs in pairs(src) do
+    local g = tbl.params or tbl.global
+    if type(g) == "table" then
+      for role, knobs in pairs(g) do
         if KNOB_TYPE[role] and type(knobs) == "table" then
-          local rr = {}
-          for key, v in pairs(knobs) do
-            local ty = KNOB_TYPE[role][key]
-            if ty == "number" then local n = tonumber(v); if n then rr[key] = n end
-            elseif ty == "boolean" then if type(v) == "boolean" then rr[key] = v end end
+          local rr = parseKnobs(role, knobs)
+          if next(rr) then out.global[role] = rr end
+        end
+      end
+    end
+    local bh = tbl.overrides or tbl.byHomun
+    if type(bh) == "table" then
+      for hk, roles in pairs(bh) do
+        local h = tonumber(hk)
+        if h and h == h and h > 0 and type(roles) == "table" then   -- h==h descarta NaN (tonumber("nan") no Lua 5.1)
+          local hr = {}
+          for role, knobs in pairs(roles) do
+            if KNOB_TYPE[role] and type(knobs) == "table" then
+              local rr = parseKnobs(role, knobs)
+              if next(rr) then hr[role] = rr end
+            end
           end
-          if next(rr) then out[role] = rr end
+          if next(hr) then out.byHomun[h] = hr end
         end
       end
     end
@@ -73,25 +93,51 @@ function BRAI.setSkillParams(tbl)
   return out
 end
 
--- valor GLOBAL de um knob de papel (ou nil se não configurado). Usado por effRole no motor.
-function BRAI.skillParamFor(role, key)
-  local r = BRAI.skillParams[role]
-  if r then return r[key] end
+-- valor efetivo de um knob: override do homúnculo (se houver) senão o global; nil se nenhum. Usado por effRole.
+function BRAI.skillParamFor(homunType, role, key)
+  local sp = BRAI.skillParams or {}
+  homunType = tonumber(homunType)
+  local bh = homunType and sp.byHomun and sp.byHomun[homunType]
+  if bh and bh[role] and bh[role][key] ~= nil then return bh[role][key] end
+  local g = sp.global and sp.global[role]
+  if g and g[key] ~= nil then return g[key] end
   return nil
 end
 
--- paramConfig(): dados p/ o modal GLOBAL de parâmetros. Por papel: rótulo, descrição da ação e
--- knobs {key, type, default (config global), value (skillParams global ou nil)}. NÃO recebe homún.
+-- paramConfig(): dados p/ o modal GLOBAL de Parâmetros. Por papel: rótulo, descrição e
+-- knobs {key, type, default (config global), value (global ou nil)}. NÃO recebe homún.
 function BRAI.paramConfig()
   local def = (BRAI.defaultConfig and BRAI.defaultConfig()) or {}
-  local sp = BRAI.skillParams or {}
+  local g = (BRAI.skillParams and BRAI.skillParams.global) or {}
   local out = {}
   for _, role in ipairs(BRAI.skillParamRoles) do
     local knobs = {}
     for _, k in ipairs(BRAI.skillParamKnobs[role]) do
-      knobs[#knobs + 1] = { key = k.key, type = k.type, default = def[k.key], value = (sp[role] and sp[role][k.key]) }
+      knobs[#knobs + 1] = { key = k.key, type = k.type, default = def[k.key], value = (g[role] and g[role][k.key]) }
     end
     out[#out + 1] = { role = role, label = BRAI.skillParamRoleLabel[role], desc = BRAI.skillParamRoleDesc[role], knobs = knobs }
+  end
+  return out
+end
+
+-- overrideConfig(homunType): dados p/ a SOBREPOSIÇÃO no modal de Skills. Por papel: rótulo,
+-- hasOverride (existe byHomun p/ este papel?) e knobs {key, type, globalValue (o que o Global
+-- resolveria: global ?? config default), value (override atual ou nil)}.
+function BRAI.overrideConfig(homunType)
+  homunType = tonumber(homunType) or 0
+  local def = (BRAI.defaultConfig and BRAI.defaultConfig()) or {}
+  local g = (BRAI.skillParams and BRAI.skillParams.global) or {}
+  local bh = (BRAI.skillParams and BRAI.skillParams.byHomun and BRAI.skillParams.byHomun[homunType]) or {}
+  local out = {}
+  for _, role in ipairs(BRAI.skillParamRoles) do
+    local ov = bh[role]
+    local knobs = {}
+    for _, k in ipairs(BRAI.skillParamKnobs[role]) do
+      local gv = def[k.key]
+      if g[role] and g[role][k.key] ~= nil then gv = g[role][k.key] end
+      knobs[#knobs + 1] = { key = k.key, type = k.type, globalValue = gv, value = (ov and ov[k.key]) }
+    end
+    out[#out + 1] = { role = role, label = BRAI.skillParamRoleLabel[role], hasOverride = (ov ~= nil), knobs = knobs }
   end
   return out
 end

@@ -170,5 +170,23 @@ do
     "retrocompat: dist skillParams{} == dist sem skillParams")
 end
 
+print("== Override por homunculo (byHomun) dist<->live ==")
+do
+  local spOv = { params = { aoeAtk = { AutoMobCount = 1 } }, overrides = { [tostring(C.BAYERI)] = { aoeAtk = { AutoMobCount = 5 } } } }
+  local PROBES = {
+    { C.BAYERI, "aoeAtk", "single", spOv, nil },                  -- override do Bayeri (5) > global (1)
+    { C.DIETER, "aoeAtk", "single", spOv, nil },                  -- Dieter sem override usa o global (1)
+    { C.BAYERI, "aoeAtk", "single", spOv, { AutoMobCount = 1 } }, -- no vence o override
+  }
+  for _, pr in ipairs(PROBES) do
+    local d = distCastSP(pr[1], pr[3], pr[2], pr[4], pr[5])
+    local l = liveCastSP(pr[1], pr[3], pr[2], pr[4], pr[5])
+    check(castStr(d) == castStr(l), HN[pr[1]] .. "/" .. pr[2] .. " [override]: dist==live {" .. castStr(d) .. "}")
+  end
+  check(not distCastSP(C.BAYERI, "single", "aoeAtk", spOv)[S.MH_HEILIGE_STANGE], "override Bayeri AMC=5 vence o global=1 -> segura")
+  check(distCastSP(C.DIETER, "single", "aoeAtk", spOv)[S.MH_LAVA_SLIDE], "override do Bayeri NAO afeta Dieter (global=1) -> dispara")
+  check(distCastSP(C.BAYERI, "single", "aoeAtk", spOv, { AutoMobCount = 1 })[S.MH_HEILIGE_STANGE], "no AMC=1 vence o override do Bayeri (5) -> dispara")
+end
+
 print(string.format("\nRESULTADO: %d ok, %d falhas", pass, fail))
 if fail > 0 then os.exit(1) end

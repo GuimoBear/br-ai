@@ -11,7 +11,7 @@ async function main() {
   const PORT = 8137;
   const srv = spawn('node', [path.join(__dirname, 'web', 'serve.js')], { env: { ...process.env, PORT: String(PORT) }, stdio: 'ignore' });
   await new Promise(r => setTimeout(r, 1200));
-  let browser, fail = 0, pass = 0, origSkills = null, page = null;
+  let browser, fail = 0, pass = 0, origSkills = null, origParams = null, page = null;
   const ok = (c, m) => { if (c) pass++; else { fail++; console.log('  FAIL- ' + m); } };
   const inspect = () => page.evaluate(() => {
     const root = document.querySelector('#scModal .sc-rows');
@@ -48,6 +48,7 @@ async function main() {
     await page.waitForFunction(() => window.trees && window.brai, null, { timeout: 20000 });
     await page.waitForFunction(() => { const b = document.getElementById('btnSkills'); return !!(b && b.onclick); }, null, { timeout: 20000 });
     origSkills = await page.evaluate(async () => (await window.skillChoiceIO.load()).data);   // p/ restaurar
+    origParams = await page.evaluate(async () => (await window.skillParamsIO.load()).data);
     await page.click('#btnSkills');
     await page.waitForFunction(() => !!document.querySelector('#scModal .sc-rows[data-homun]'), null, { timeout: 20000 });
 
@@ -117,9 +118,40 @@ async function main() {
     await selHomun(2);
     { const a = await inspect(); ok(a.hasCastling && a.castlingLines === 1, 'Amistr: Castling aparece como skill fixa'); ok(!a.hasHealSelf, 'Amistr: Cura própria OCULTA (não tem)'); }
 
+    // ===== Sobreposição de parâmetros por homúnculo (checkbox por papel) =====
+    const loadParams = () => page.evaluate(async () => JSON.parse((await window.skillParamsIO.load()).data));
+    await selHomun(51);   // Dieter (tem AoE)
+    const ovWrap = '#scModal .sc-ovwrap[data-role="aoeAtk"]';
+    const ovAmc = '#scModal .sc-ovknobs[data-role="aoeAtk"] .ovKnob[data-key="AutoMobCount"]';
+    ok((await page.locator(ovWrap + ' .sc-ovtoggle').count()) === 1, 'aoeAtk tem checkbox "sobrepor parametros"');
+    ok((await page.locator(ovWrap + ' .sc-ovtoggle').isChecked()) === false, 'sobrepor vem DESMARCADO por padrao');
+    ok((await page.locator('#scModal .sc-ovknobs[data-role="aoeAtk"]').count()) === 0, 'desmarcado: knobs escondidos');
+    ok(!/herdar|padr\u00e3o/i.test(await page.locator(ovWrap).innerText()), 'sem rotulo herdar/padrao na sobreposicao');
+    // marcar -> knobs aparecem com o valor GLOBAL (AutoMobCount default=2) e cria override no JSON
+    await page.locator(ovWrap + ' .sc-ovtoggle').check();
+    await page.waitForFunction(() => document.querySelectorAll('#scModal .sc-ovknobs[data-role="aoeAtk"] .ovKnob').length > 0, null, { timeout: 5000 });
+    ok((await page.locator(ovAmc).inputValue()) === '2', 'marcar carrega o valor Global (AutoMobCount=2)');
+    let jp = await loadParams();
+    ok(!!(jp.overrides && jp.overrides['51'] && jp.overrides['51'].aoeAtk && jp.overrides['51'].aoeAtk.AutoMobCount === 2), 'marcar cria override no JSON (=global)');
+    // editar -> persiste
+    await page.fill(ovAmc, '1'); await page.dispatchEvent(ovAmc, 'change'); await page.waitForTimeout(300);
+    jp = await loadParams();
+    ok(jp.overrides['51'].aoeAtk.AutoMobCount === 1, 'editar o override persiste (=1)');
+    // desmarcar -> descarta (some do JSON) e esconde os knobs
+    await page.locator(ovWrap + ' .sc-ovtoggle').uncheck();
+    await page.waitForFunction(() => document.querySelectorAll('#scModal .sc-ovknobs[data-role="aoeAtk"]').length === 0, null, { timeout: 5000 });
+    jp = await loadParams();
+    ok(!(jp.overrides && jp.overrides['51'] && jp.overrides['51'].aoeAtk), 'desmarcar descarta o override (some do JSON)');
+    // remarcar -> recarrega o GLOBAL (volta a 2, nao o 1 editado)
+    await page.locator(ovWrap + ' .sc-ovtoggle').check();
+    await page.waitForFunction(() => document.querySelectorAll('#scModal .sc-ovknobs[data-role="aoeAtk"] .ovKnob').length > 0, null, { timeout: 5000 });
+    ok((await page.locator(ovAmc).inputValue()) === '2', 'remarcar recarrega o Global (volta a 2)');
+    await page.locator(ovWrap + ' .sc-ovtoggle').uncheck(); await page.waitForTimeout(200);
+
     ok(errors.length === 0, 'sem erros de console (' + errors.slice(0, 3).join(' | ') + ')');
   } finally {
     try { if (page && origSkills != null) await page.evaluate(async (dd) => { try { await window.skillChoiceIO.save(dd); } catch (e) {} }, origSkills); } catch (e) {}
+    try { if (page && origParams != null) await page.evaluate(async (dd) => { try { await window.skillParamsIO.save(dd); } catch (e) {} }, origParams); } catch (e) {}
     if (browser) await browser.close();
     srv.kill();
   }

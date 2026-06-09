@@ -41,7 +41,7 @@ async function main() {
     await pg.waitForSelector('#spModal', { timeout: 8000 });
     ok(await pg.locator('#spModal').isVisible(), 'botão Parâmetros abre o modal #spModal');
     ok((await pg.locator('#spModal #spHomunSel').count()) === 0, '#spModal é global (sem seletor de homúnculo)');
-    ok((await pg.locator('#spModal .sp-row').count()) === 8, '#spModal tem 8 papéis (ações)');
+    ok((await pg.locator('#spModal .sp-tab').count()) === 8, '#spModal tem 8 abas (ações)');
 
     ok(errs.length === 0, 'sem erros de página (' + errs.slice(0, 2).join(' | ') + ')');
   } finally { if (browser) await browser.close(); s.close(); }

@@ -808,8 +808,11 @@ function SIM_DISPATCH(method, argJson)
 		BRAI.setSkillParams(arg or {})
 		return json.encode({ ok = true })
 	elseif method == "paramConfig" then
-		-- knobs por papel (default global + valor atual) + skills efetivas p/ o modal de parametros
+		-- knobs por papel (default global + valor global atual) p/ o modal GLOBAL de parametros
 		return json.encode(BRAI.paramConfig())
+	elseif method == "overrideConfig" then
+		-- override por homunculo p/ a sobreposicao no modal de Skills (globalValue + value + hasOverride)
+		return json.encode(BRAI.overrideConfig(arg and arg.homunType or 0))
 	elseif method == "summonInfo" then
 		return json.encode(BRAI.summonInfo(arg and arg.homunType or 0))
 	elseif method == "setSummonChoice" then

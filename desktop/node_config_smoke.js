@@ -38,7 +38,7 @@ async function main() {
     // o link abre o #spModal focado no papel aoeAtk
     await pg.click('#iParamCfg');
     await pg.waitForSelector('#spModal', { timeout: 8000 });
-    ok((await pg.locator('#spModal .sp-row[data-role="aoeAtk"].sp-focus').count()) === 1, 'C6: link Parâmetros abre #spModal focado no papel aoeAtk');
+    ok((await pg.locator('#spModal .sp-tab[data-role="aoeAtk"].active').count()) === 1, 'C6: link Parâmetros abre #spModal na aba do papel aoeAtk');
     await pg.evaluate(() => { const m = document.getElementById('spModal'); if (m) m.remove(); });
     // expandir o "Avançado" p/ testar o override por nó (#4)
     await pg.locator('#inspector details.insp-adv summary').click();
@@ -82,7 +82,7 @@ async function main() {
     ok((await pg.locator('#iParamCfg').count()) === 1, 'C8: UseHealOwner tem link "Parâmetros desta skill"');
     ok((await pg.locator('#inspector .iParam, #inspector .iParamBool').count()) === 0, 'C8: UseHealOwner sem parede de knobs por nó');
     await pg.click('#iParamCfg'); await pg.waitForSelector('#spModal', { timeout: 8000 });
-    ok((await pg.locator('#spModal .sp-row[data-role="healOwner"].sp-focus').count()) === 1, 'C8: link abre #spModal focado no papel healOwner');
+    ok((await pg.locator('#spModal .sp-tab[data-role="healOwner"].active').count()) === 1, 'C8: link abre #spModal na aba do papel healOwner');
     await pg.evaluate(() => { const m = document.getElementById('spModal'); if (m) m.remove(); });
 
     ok(errs.length === 0, 'sem erros de página (' + errs.slice(0, 2).join(' | ') + ')');

@@ -138,7 +138,7 @@ const catalog = { monsters: [{ id: 1002, desc: 'Poring' }], groups: [{ id: 1, na
 
 // --- C2: skill_params.lua (parâmetros por homún/papel) no zip + conteúdo + paridade ---
 {
-  const skillParams = { params: { aoeAtk: { AutoMobCount: 1, AoEMaximizeTargets: true } } };
+  const skillParams = { params: { aoeAtk: { AutoMobCount: 1, AoEMaximizeTargets: true } }, overrides: { '51': { aoeAtk: { AutoMobCount: 3 } } } };
   const { root, res, safe } = build({ name: 'Teste C2', spec: simpleSpec, skillParams: skillParams,
     sourceJson: { tree: '{}', skills: '{"choices":{}}', skillParams: JSON.stringify(skillParams) } });
   const sp = srcFile(root, safe, 'skill_params.lua');
@@ -147,10 +147,11 @@ const catalog = { monsters: [{ id: 1002, desc: 'Poring' }], groups: [{ id: 1, na
   const txt = fs.readFileSync(sp, 'utf8');
   ok(lint(txt).ok, 'C2: skill_params.lua sintaxe válida');
   ok(txt.includes('aoeAtk') && txt.includes('AutoMobCount') && txt.includes('AoEMaximizeTargets'), 'C2: skill_params.lua traz aoeAtk knobs (global)');
+  ok(txt.includes('overrides') && txt.includes('["51"]'), 'C2: skill_params.lua traz overrides por homúnculo');
   ok(txt.includes('BRAI.setSkillParams'), 'C2: skill_params.lua chama setSkillParams');
   // source re-importável
   const sdir = path.join(root, 'trees', safe, 'dist', 'source');
-  ok(JSON.parse(fs.readFileSync(path.join(sdir, 'homun_skill_params.json'), 'utf8')).params.aoeAtk.AutoMobCount === 1, 'C2: source/homun_skill_params.json re-importável');
+  { const j = JSON.parse(fs.readFileSync(path.join(sdir, 'homun_skill_params.json'), 'utf8')); ok(j.params.aoeAtk.AutoMobCount === 1 && j.overrides['51'].aoeAtk.AutoMobCount === 3, 'C2: source/homun_skill_params.json re-importável (global+overrides)'); }
   fs.rmSync(root, { recursive: true, force: true });
   // paridade node<->web de generateSkillParams
   const bn = buildTree.generateSkillParams(skillParams), wn = buildTreeWeb.generateSkillParams(skillParams);

@@ -29,12 +29,15 @@ async function main() {
     await pg.waitForSelector('#spModal', { timeout: 8000 });
     await pg.waitForTimeout(300);
 
-    // GLOBAL: sem seletor de homúnculo, sem cards de skill por homún
+    // GLOBAL em ABAS: sem seletor de homúnculo; 8 abas; só o papel ATIVO aparece
+    const clickTab = async (role) => { await pg.click('#spModal .sp-tab[data-role="' + role + '"]'); await pg.waitForFunction((role) => { const t = document.querySelector('#spModal .sp-tab.active'); return !!t && t.dataset.role === role; }, role, { timeout: 3000 }); };
     ok((await pg.locator('#spModal #spHomunSel').count()) === 0, 'modal GLOBAL: sem seletor de homúnculo');
-    ok((await pg.locator('#spModal .sp-row').count()) === 8, 'modal: 8 seções de papel (ação)');
-    ok((await pg.locator('#spModal .sp-row[data-role="aoeAtk"]').count()) === 1, 'tem o papel aoeAtk');
-    ok((await pg.locator('#spModal .sp-row[data-role="castling"]').count()) === 1, 'tem o papel castling');
-    ok((await pg.locator('#spModal .sp-desc').count()) >= 8, 'cada papel mostra a descrição da ação');
+    ok((await pg.locator('#spModal .sp-tab').count()) === 8, 'modal: 8 abas de papel (ação)');
+    ok((await pg.locator('#spModal .sp-row').count()) === 1, 'só o papel ATIVO aparece (1 seção)');
+    ok((await pg.locator('#spModal .sp-tab.active').count()) === 1, 'exatamente 1 aba ativa');
+    ok((await pg.locator('#spModal .sp-tab[data-role="aoeAtk"]').count()) === 1 && (await pg.locator('#spModal .sp-tab[data-role="castling"]').count()) === 1, 'há abas aoeAtk e castling');
+    ok((await pg.locator('#spModal .sp-desc').count()) >= 1, 'a aba ativa mostra a descrição da ação');
+    ok((await pg.locator('#spModal .sp-row[data-role="aoeAtk"]').count()) === 1, 'aba ativa inicial = aoeAtk (1º papel)');
 
     // knob number AutoMobCount (aoeAtk) -> 1 -> grava GLOBAL (params.aoeAtk, sem chave de homún)
     const amc = pg.locator('#spModal .spKnob[data-role="aoeAtk"][data-key="AutoMobCount"]');
@@ -58,14 +61,19 @@ async function main() {
     j = await loadJson();
     ok(!(j.params.aoeAtk && ('AutoMobCount' in j.params.aoeAtk)), 'limpar número remove a chave do JSON');
 
-    // cura/castling continuam configuráveis aqui (os 8 papéis)
-    ok((await pg.locator('#spModal .spKnob[data-role="healSelf"][data-key="HealSelfHP"]').count()) === 1, 'papel healSelf tem HealSelfHP');
-    ok((await pg.locator('#spModal .spKnob[data-role="healOwner"][data-key="HealOwnerHP"]').count()) === 1, 'papel healOwner tem HealOwnerHP');
-    ok((await pg.locator('#spModal .spKnob[data-role="castling"][data-key="CastleDefendThreshold"]').count()) === 1, 'papel castling tem CastleDefendThreshold');
+    // cura/castling continuam configuráveis aqui (trocando de aba)
+    await clickTab('healSelf');
+    ok((await pg.locator('#spModal .spKnob[data-role="healSelf"][data-key="HealSelfHP"]').count()) === 1, 'aba healSelf tem HealSelfHP');
+    ok((await pg.locator('#spModal .sp-row[data-role="aoeAtk"]').count()) === 0, 'ao trocar de aba, o papel anterior some (só 1 ativo)');
+    await clickTab('healOwner');
+    ok((await pg.locator('#spModal .spKnob[data-role="healOwner"][data-key="HealOwnerHP"]').count()) === 1, 'aba healOwner tem HealOwnerHP');
+    await clickTab('castling');
+    ok((await pg.locator('#spModal .spKnob[data-role="castling"][data-key="CastleDefendThreshold"]').count()) === 1, 'aba castling tem CastleDefendThreshold');
 
     // persiste ao reabrir
     await pg.evaluate(() => { const m = document.getElementById('spModal'); if (m) m.remove(); });
     await pg.click('#btnSkillParams'); await pg.waitForSelector('#spModal'); await pg.waitForTimeout(300);
+    await clickTab('aoeAtk');
     ok((await pg.locator('#spModal .spKnob[data-role="aoeAtk"][data-key="UseAttackSkill"]').inputValue()) === 'false', 'reabrir: UseAttackSkill="não" persistiu');
 
     ok((await pg.locator('#spExport').count()) === 1 && (await pg.locator('#spImport').count()) === 1, 'tem botões exportar/importar parâmetros');

@@ -221,19 +221,20 @@ function generateSummonChoice(choices) {
 }
 
 function generateSkillParams(params) {
-  const src = (params && params.params) ? params.params : (params || {});
-  const data = {};
-  Object.keys(src).forEach(function (role) {
-    const knobs = src[role] || {}, rr = {};
-    Object.keys(knobs).forEach(function (key) { const v = knobs[key]; if (typeof v === 'number' || typeof v === 'boolean') rr[key] = v; });
-    if (Object.keys(rr).length) data[role] = rr;
-  });
+  const src = params || {};
+  const gIn = src.params || src.global || {};
+  const oIn = src.overrides || src.byHomun || {};
+  const clean = function (knobs) { const rr = {}; Object.keys(knobs || {}).forEach(function (key) { const v = knobs[key]; if (typeof v === 'number' || typeof v === 'boolean') rr[key] = v; }); return rr; };
+  const global = {};
+  Object.keys(gIn).forEach(function (role) { const rr = clean(gIn[role]); if (Object.keys(rr).length) global[role] = rr; });
+  const overrides = {};
+  Object.keys(oIn).forEach(function (h) { const roles = oIn[h] || {}, hr = {}; Object.keys(roles).forEach(function (role) { const rr = clean(roles[role]); if (Object.keys(rr).length) hr[role] = rr; }); if (Object.keys(hr).length) overrides[String(h)] = hr; });
   return [
     '-- skill_params.lua — GERADO por tools/build_tree.js. Nao editar a mao.',
-    '-- Parametros GLOBAIS das acoes de skill (modal "Parametros das skills" do editor).',
+    '-- Parametros das acoes de skill: global (todos) + overrides por homunculo.',
     'BRAI = BRAI or {}',
     '',
-    'local params = ' + luaValue({ params: data }, 0),
+    'local params = ' + luaValue({ params: global, overrides: overrides }, 0),
     '',
     'if BRAI.setSkillParams then BRAI.setSkillParams(params) end',
     'BRAI.skillParamsRaw = params',
