@@ -50,7 +50,7 @@ async function main() {
     ok(await pg.locator('.iParamBool[data-f="UseAttackSkill"]').count() > 0, 'UseAoESkill: boolean tri-estado UseAttackSkill');
     ok(await pg.locator('.iParamBool[data-f="AoEMaximizeTargets"]').count() > 0, 'UseAoESkill: boolean tri-estado AoEMaximizeTargets');
     // dica do valor global no campo number (AutoMobCount global = 2)
-    ok(/AutoMobCount.*global: 2/s.test(await bodyText()), 'UseAoESkill: dica "global: 2" no AutoMobCount');
+    ok(/Mín\. de alvos p\/ AoE[\s\S]*global: 2/.test(await bodyText()), 'UseAoESkill: dica "global: 2" no rótulo legível de AutoMobCount');
 
     // editar AutoMobCount=1 -> grava em n.params (aparece no rótulo do nó)
     await pg.fill('.iParam[data-f="AutoMobCount"]', '1');

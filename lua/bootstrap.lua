@@ -42,6 +42,7 @@ local function load(base)
 	f("src/behaviors/commands.lua")
 	f("src/behaviors/skills.lua")
 	f("src/data/leaf_meta.lua")   -- nomes legíveis + grupos das folhas (UI)
+	f("src/data/param_meta.lua")  -- rótulos legíveis dos parâmetros (UI)
 
 	f("src/bt/tree.lua")
 	f("src/tree_homun.lua")

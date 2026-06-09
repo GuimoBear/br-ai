@@ -113,7 +113,8 @@ function BRAI.paramConfig()
   for _, role in ipairs(BRAI.skillParamRoles) do
     local knobs = {}
     for _, k in ipairs(BRAI.skillParamKnobs[role]) do
-      knobs[#knobs + 1] = { key = k.key, type = k.type, default = def[k.key], value = (g[role] and g[role][k.key]) }
+      local pm = (BRAI.paramMeta and BRAI.paramMeta[k.key]) or {}
+      knobs[#knobs + 1] = { key = k.key, type = k.type, default = def[k.key], value = (g[role] and g[role][k.key]), label = pm.label, help = pm.help }
     end
     out[#out + 1] = { role = role, label = BRAI.skillParamRoleLabel[role], desc = BRAI.skillParamRoleDesc[role], knobs = knobs }
   end
@@ -135,7 +136,8 @@ function BRAI.overrideConfig(homunType)
     for _, k in ipairs(BRAI.skillParamKnobs[role]) do
       local gv = def[k.key]
       if g[role] and g[role][k.key] ~= nil then gv = g[role][k.key] end
-      knobs[#knobs + 1] = { key = k.key, type = k.type, globalValue = gv, value = (ov and ov[k.key]) }
+      local pm = (BRAI.paramMeta and BRAI.paramMeta[k.key]) or {}
+      knobs[#knobs + 1] = { key = k.key, type = k.type, globalValue = gv, value = (ov and ov[k.key]), label = pm.label, help = pm.help }
     end
     out[#out + 1] = { role = role, label = BRAI.skillParamRoleLabel[role], hasOverride = (ov ~= nil), knobs = knobs }
   end
