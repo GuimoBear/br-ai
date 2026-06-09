@@ -38,3 +38,8 @@ contextBridge.exposeInMainWorld('summonIO', {
   load: () => ipcRenderer.invoke('summonChoice:load'),
   save: (jsonText) => ipcRenderer.invoke('summonChoice:save', jsonText),
 });
+
+contextBridge.exposeInMainWorld('skillParamsIO', {
+  load: () => ipcRenderer.invoke('skillParams:load'),
+  save: (jsonText) => ipcRenderer.invoke('skillParams:save', jsonText),
+});

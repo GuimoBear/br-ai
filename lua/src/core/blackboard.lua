@@ -108,6 +108,33 @@ function BRAI.defaultConfig()
 		GrappleThreatLimit  = 1,     -- máx. de monstros no raio p/ liberar o Agarrão (Flee=0)
 		BossGroup           = 0,     -- grupo (monsters.json) tratado como Boss/MVP (EQC proibido)
 		StyleSwitchLockMs   = 1000,  -- anti-loop: tempo mínimo entre trocas de estilo (Eleanor)
+		EleanorDoNotSwitchMode = false, -- trava o estilo da Eleanor (não conjura Style Change)
+		-- Kite (fuga ativa mantendo distância) — migrado do H_Config
+		KiteMonsters        = false, -- kitar qualquer alvo em combate (ramo global)
+		ForceKite           = false, -- kitar mesmo sem ameaça (variante agressiva)
+		KiteDist            = 5,     -- distância a manter do alvo ao kitar
+		KiteStep            = 2,     -- células por passo ao kitar
+		KiteBounds          = 10,    -- distância máx. do dono ao kitar
+		-- Dance attack (golpe + passo lateral) — migrado do H_Config
+		UseDanceAttack      = false, -- ataca dançando (alterna golpe e reposicionamento)
+		DanceMinSP          = 0,     -- só dança com SP acima disto (0 = sempre)
+		-- Proteção do dono + estratégia de mira (8b) — migrado do H_Config
+		RescueOwnerLowHP        = 0,     -- vai ao lado do dono quando HP% do dono < isto (0 = desligado)
+		DefensiveBuffOwnerMobbed = false, -- buffa o dono quando ele está cercado
+		OpportunisticTargeting  = false, -- troca p/ um alvo melhor se aparecer (liga o ReacquireIfBetter)
+		UseSkillOnly            = false, -- só usa skills; bloqueia o ataque normal (AttackTarget)
+		-- Perambular ocioso, movimento sticky, AoE e skill-S em chase/attack (8c) — migrado do H_Config
+		UseIdleWalk          = false, -- perambula perto do dono quando ocioso
+		IdleWalkSP           = 0,     -- só perambula com SP% acima disto
+		IdleWalkDistance     = 2,     -- raio (do dono) p/ perambular
+		MoveSticky           = false, -- deadband maior ao seguir o dono (menos jitter)
+		StickyMargin         = 2,     -- células extras de tolerância quando sticky
+		MoveStickyFight      = false, -- não retorna ao dono enquanto há alvo
+		AutoMobMode          = 2,     -- 0 = sem AoE automática; >0 = usa (via AutoMobCount)
+		AoEFixedLevel        = 0,     -- nível fixo da AoE (0 = automático/máximo conhecido)
+		AoEMaximizeTargets   = false, -- mira a AoE no aglomerado mais denso (ground, centro no inimigo)
+		UseHomunSSkillChase  = true,  -- pode usar a skill principal enquanto se aproxima (fora do alcance de ataque)
+		UseHomunSSkillAttack = true,  -- pode usar a skill principal dentro do alcance de ataque
 	}
 end
 

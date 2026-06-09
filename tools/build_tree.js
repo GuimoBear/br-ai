@@ -42,7 +42,45 @@ function luaObject(obj, indent) {
   return '{\n' + parts.join(',\n') + '\n' + '\t'.repeat(indent) + '}';
 }
 
+function pruneDisabled(spec) {
+  if (!spec || typeof spec !== 'object') return spec;
+  if (spec.disabled) return null;
+  var out = {};
+  var keys = Object.keys(spec);
+  for (var i = 0; i < keys.length; i++) {
+    var k = keys[i];
+    if (k === 'disabled') continue;
+    if (k === 'children' && Array.isArray(spec.children)) {
+      var arr = [];
+      for (var j = 0; j < spec.children.length; j++) { var pc = pruneDisabled(spec.children[j]); if (pc != null) arr.push(pc); }
+      out.children = arr;
+    } else if (k === 'child') {
+      out.child = spec.child ? pruneDisabled(spec.child) : null;
+    } else {
+      out[k] = spec[k];
+    }
+  }
+  var DEC_REQ = { inverter: 1, succeeder: 1, cooldown: 1, limiter: 1 };
+  if (DEC_REQ[out.type] && out.child == null) return null;
+  return out;
+}
+
+// treeUsesMonsterCheck(spec): a árvore (após poda de desativados) usa algum nó monsterCheck?
+// Só esse nó consome o catálogo de monstros/grupos; sem ele, monsters.lua é inútil no pacote.
+// Recursivo em children/child; ignora subárvores desativadas (que o codegen poda). [PLANO-GERACAO-LUA #2]
+function treeUsesMonsterCheck(spec) {
+  if (!spec || typeof spec !== 'object') return false;
+  if (spec.disabled) return false;
+  if (spec.type === 'monsterCheck') return true;
+  if (Array.isArray(spec.children)) {
+    for (var i = 0; i < spec.children.length; i++) if (treeUsesMonsterCheck(spec.children[i])) return true;
+  }
+  if (spec.child && treeUsesMonsterCheck(spec.child)) return true;
+  return false;
+}
+
 function generate(spec) {
+  spec = pruneDisabled(spec) || { type: 'selector', children: [] };
   return [
     '-- tree_homun.lua — GERADO por tools/build_tree.js. Nao editar a mao.',
     '-- Fonte da verdade: o JSON correspondente (editor visual).',
@@ -74,14 +112,23 @@ function generateConfig(ctx) {
   const ht = ctx.homunType || 0, bt = ctx.baseType || 0;
   const hn = HOMUN_NAMES[ht] || ('tipo ' + ht);
   const bn = bt ? (HOMUN_NAMES[bt] || ('tipo ' + bt)) : 'nenhuma';
+  // mescla a config migrada (ctx.config) e garante BaseHomunType
+  const cfg = {};
+  const src = ctx.config || {};
+  Object.keys(src).forEach(function (k) { if (src[k] !== undefined && src[k] !== null) cfg[k] = src[k]; });
+  if (cfg.BaseHomunType === undefined) cfg.BaseHomunType = bt;
+  const lines = Object.keys(cfg).map(function (k) {
+    const key = IDENT.test(k) ? k : '[' + luaString(k) + ']';
+    return '\t' + key + ' = ' + luaValue(cfg[k], 1) + ',';
+  });
   return [
     '-- config.lua — GERADO por tools/build_tree.js. Nao editar a mao.',
-    '-- Config de runtime desta arvore. Copie junto com tree_homun.lua.',
+    '-- Config de runtime desta arvore (knobs migrados / forma base). Copie junto com tree_homun.lua.',
     '-- Homunculo: ' + hn + ' · Forma base: ' + bn,
     'BRAI = BRAI or {}',
     '',
     'BRAI.userConfig = {',
-    '\tBaseHomunType = ' + bt + ',',
+    lines.join('\n'),
     '}',
     '',
     'return BRAI.userConfig',
@@ -118,9 +165,17 @@ function generateSkillChoice(choices) {
   Object.keys(src).forEach(function (k) {
     const roles = src[k] || {}, r = {};
     ['mainAtk', 'aoeAtk', 'offBuff', 'defBuff'].forEach(function (rk) {
-      const v = parseInt(roles[rk], 10);
-      if (v > 0) r[rk] = v;
+      const rv = roles[rk];
+      if (Array.isArray(rv)) { const lst = rv.map(function (x) { return parseInt(x, 10); }).filter(function (x) { return x > 0; }); r[rk] = lst; }   // lista (inclui VAZIA = nenhuma skill)
+      else { const v = parseInt(rv, 10); if (v > 0) r[rk] = v; }
+      const lv = parseInt(roles[rk + 'Level'], 10);   // nível por papel (migrado da AzzyAI)
+      if (lv > 0) r[rk + 'Level'] = lv;
     });
+    if (roles.combo && typeof roles.combo === 'object') r.combo = roles.combo;   // padrão de combo (Eleanor)
+    if (roles.skillLevels && typeof roles.skillLevels === 'object') {            // nível por skill
+      const sl = {}; Object.keys(roles.skillLevels).forEach(function (id) { const lv2 = parseInt(roles.skillLevels[id], 10); if (lv2 > 0) sl[String(id)] = lv2; });
+      if (Object.keys(sl).length) r.skillLevels = sl;
+    }
     if (Object.keys(r).length) data[String(k)] = r;
   });
   return [
@@ -165,4 +220,34 @@ function generateSummonChoice(choices) {
   ].join('\n');
 }
 
-module.exports = { generate, generateConfig, generateMonsters, generateSkillChoice, generateSummonChoice };
+function generateSkillParams(params) {
+  const src = (params && params.params) ? params.params : (params || {});
+  const data = {};
+  Object.keys(src).forEach(function (k) {
+    const roles = src[k] || {}, r = {};
+    Object.keys(roles).forEach(function (role) {
+      const knobs = roles[role];
+      if (knobs && typeof knobs === 'object') {
+        const rr = {};
+        Object.keys(knobs).forEach(function (key) { const v = knobs[key]; if (typeof v === 'number' || typeof v === 'boolean') rr[key] = v; });
+        if (Object.keys(rr).length) r[role] = rr;
+      }
+    });
+    if (Object.keys(r).length) data[String(k)] = r;
+  });
+  return [
+    '-- skill_params.lua — GERADO por tools/build_tree.js. Nao editar a mao.',
+    '-- Parametros de skill por homunculo/papel (modal "Parametros das skills" do editor).',
+    'BRAI = BRAI or {}',
+    '',
+    'local params = ' + luaValue({ params: data }, 0),
+    '',
+    'if BRAI.setSkillParams then BRAI.setSkillParams(params) end',
+    'BRAI.skillParamsRaw = params',
+    '',
+    'return params',
+    '',
+  ].join('\n');
+}
+
+module.exports = { generate, generateConfig, generateMonsters, generateSkillChoice, generateSummonChoice, generateSkillParams, treeUsesMonsterCheck };

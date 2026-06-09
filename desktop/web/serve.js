@@ -66,9 +66,9 @@ const server = http.createServer((req, res) => {
     let target = filePath;
     try {
       if (fs.statSync(target).isDirectory()) {
-        // a pasta da web abre direto no SIMULADOR (como o app Electron); as demais usam index.html
+        // a pasta da web abre direto no EDITOR (tela principal); as demais usam index.html
         const rel = path.relative(ROOT, target).split(path.sep).join('/');
-        target = path.join(target, rel === 'desktop/web' ? 'sim.html' : 'index.html');
+        target = path.join(target, rel === 'desktop/web' ? 'editor.html' : 'index.html');
       }
     } catch (e) {}
     fs.readFile(target, (err, data) => {

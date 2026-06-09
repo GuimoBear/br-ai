@@ -103,10 +103,14 @@ function buildPackage(opts) {
   const gen = {
     'tree_homun.lua': opts.buildTree.generate(opts.spec),
     'config.lua': opts.buildTree.generateConfig(opts.ctx || {}),
-    'monsters.lua': opts.buildTree.generateMonsters(opts.catalog || { monsters: [], groups: [] }),
     'skill_choice.lua': opts.buildTree.generateSkillChoice(opts.choices || { choices: {} }),
     'summon_choice.lua': opts.buildTree.generateSummonChoice(opts.summonChoices || { choices: {} }),
+    'skill_params.lua': opts.buildTree.generateSkillParams(opts.skillParams || { params: {} }),
   };
+  // monsters.lua so entra no pacote se a arvore usa algum no monsterCheck (#2): sem ele o
+  // arquivo e inutil. O AI.lua tolera a ausencia (pcall(dofile)). [PLANO-GERACAO-LUA #2]
+  const usesMon = opts.buildTree.treeUsesMonsterCheck ? opts.buildTree.treeUsesMonsterCheck(opts.spec) : true;
+  if (usesMon) gen['monsters.lua'] = opts.buildTree.generateMonsters(opts.catalog || { monsters: [], groups: [] });
   for (const [fname, text] of Object.entries(gen)) {
     fs.writeFileSync(path.join(srcDir, fname), text, 'utf8');
     // substitui (ou adiciona) a entrada no zip
@@ -120,6 +124,23 @@ function buildPackage(opts) {
   const rm = readme(safe, opts.ctx || {});
   fs.writeFileSync(path.join(distDir, 'LEIA-ME.txt'), rm, 'utf8');
   zipEntries.push({ name: 'LEIA-ME.txt', data: Buffer.from(rm, 'utf8') });
+
+  // 4.5) JSONs-fonte (referencia/re-importacao) em source/ — o AI.lua NAO os carrega. [#6]
+  //   tree.json + homun_skills.json sempre; monsters.json so se a arvore usa monsterCheck (casa com #2).
+  const sj = opts.sourceJson || {};
+  const sourceFiles = [];
+  if (sj.tree != null) sourceFiles.push(['tree.json', sj.tree]);
+  if (sj.skills != null) sourceFiles.push(['homun_skills.json', sj.skills]);
+  if (sj.skillParams != null) sourceFiles.push(['homun_skill_params.json', sj.skillParams]);
+  if (usesMon && sj.monsters != null) sourceFiles.push(['monsters.json', sj.monsters]);
+  if (sourceFiles.length) {
+    const sourceDir = path.join(distDir, 'source');
+    ensureDir(sourceDir);
+    for (const [fname, text] of sourceFiles) {
+      fs.writeFileSync(path.join(sourceDir, fname), text, 'utf8');
+      zipEntries.push({ name: 'source/' + fname, data: Buffer.from(text, 'utf8') });
+    }
+  }
 
   // 5) zip -> trees/<safe>/<safe>.zip
   const zipPath = path.join(treeDir, safe + '.zip');

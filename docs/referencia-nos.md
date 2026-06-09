@@ -106,10 +106,12 @@ Uma `action` referencia uma destas pelo `name`.
 
 Estas ações resolvem qual skill usar a partir do perfil do tipo de homúnculo (e config), sem você indicar IDs.
 
+> No **editor**, o rótulo dessas ações mostra **quais skills** o homúnculo do contexto resolve (uma por linha, com o nível). No **simulador**, as mesmas skills aparecem como **filhos** do nó e a usada no tick acende. Quando o tipo não tem skill do papel (ex.: Dieter sem ataque principal) ou você esvaziou o papel na tela *Skills*, o nó recebe um aviso discreto (⚠) e a ação é ignorada. Ver «Skills de cada ação» no guia do simulador.
+
 | Ação | Descrição |
 |---|---|
 | `UseMainSkill` | Usa a skill ofensiva single-target no alvo. |
-| `UseAoESkill` | Usa a skill de AoE quando há mobs suficientes (AutoMobCount). |
+| `UseAoESkill` | Usa a skill de AoE da lista de prioridade. Sem `mainAtk` (ex.: Dieter), a AoE é a ofensiva principal e dispara com ≥1 alvo; com `mainAtk`, exige `AutoMobCount` alvos. `AutoMobMode=0` desliga; `AoEFixedLevel` fixa o nível; `AoEMaximizeTargets` mira no aglomerado. |
 | `UseOffensiveBuff` | Recasta auto-buffs ofensivos expirados (Bloodlust, Flitting, Pyroclastic, ...). |
 | `UseDefensiveBuff` | Recasta auto-buffs defensivos expirados (Amistr Bulwark, Granitic Armor, ...). |
 | `UseHealSelf` | Cura a si quando HP% < HealSelfHP (Chaotic Blessing). |

@@ -44,6 +44,7 @@ end, { desc = "Seleciona o alvo por prioridade (nearest|lowestHp|ownerAttacker),
 
 -- Oportunista: mantém o alvo atual, trocando por um melhor se surgir.
 reg.action("ReacquireIfBetter", function(bb, p)
+	if p and p.gate and not bb.config[p.gate] then return S.FAILURE end  -- gate liga ao flag (ex.: OpportunisticTargeting)
 	if not bb.targetInfo then return S.FAILURE end   -- sem alvo: deixa o AcquireTarget agir
 	local by = (p and p.by) or "nearest"
 	local best, bestScore = bestCandidate(bb, by)
@@ -54,7 +55,7 @@ reg.action("ReacquireIfBetter", function(bb, p)
 		end
 	end
 	return S.SUCCESS
-end, { desc = "Mantém o alvo atual; troca por um melhor se aparecer (oportunista). by: nearest|lowestHp|ownerAttacker.", params = { by = "string" } })
+end, { desc = "Mantém o alvo atual; troca por um melhor se aparecer (oportunista). by: nearest|lowestHp|ownerAttacker. 'gate' liga ao flag de config.", params = { by = "string", gate = "string" }, optional = { "gate" } })
 
 -- Resgate do dono: mira no monstro que está atacando o dono (ignora KS, é nosso dono).
 reg.action("AcquireOwnerAttacker", function(bb)
@@ -72,6 +73,17 @@ reg.action("AcquireOwnerAttacker", function(bb)
 	end
 	return S.FAILURE
 end, { desc = "Mira no monstro que está atacando o dono (resgate)." })
+
+-- Resgate posicional: vai para o lado do dono quando o HP% do dono cai abaixo de RescueOwnerLowHP.
+reg.action("RescueOwner", function(bb, p)
+	if not bb.owner.exists or bb.owner.hpPct == nil then return S.FAILURE end
+	local thr = (p and p.pct) or bb.config.RescueOwnerLowHP or 0
+	if thr <= 0 or bb.owner.hpPct >= thr then return S.FAILURE end   -- dono fora de perigo: não resgata
+	if (bb.owner.dist or 0) <= 1 then return S.FAILURE end           -- já ao lado: deixa atacar o agressor
+	local cx, cy = util.stepToward(bb.self.x, bb.self.y, bb.owner.x, bb.owner.y)
+	bb:setIntent("move", { x = cx, y = cy, reason = "rescue", target = bb.owner.id })
+	return S.RUNNING
+end, { desc = "Vai p/ o lado do dono quando o HP% do dono < 'pct' (vazio = config.RescueOwnerLowHP). Resgate posicional.", params = { pct = "number" }, optional = { "pct" } })
 
 -- Persegue o alvo até o alcance de ataque. RUNNING enquanto se aproxima.
 -- 'giveUp' (ticks sem progresso) > 0: desiste e marca o alvo como inalcançável.
@@ -116,9 +128,11 @@ end, { desc = "Persegue até a distância 'dist' (vazio = alcance do perfil). 'g
 
 -- Dance attack: ataca o alvo enquanto reposiciona (alterna golpe e passo lateral).
 reg.action("DanceAttack", function(bb, p)
+	if p and p.gate and not bb.config[p.gate] then return S.FAILURE end  -- ramo migrado respeita o flag (UseDanceAttack)
 	local t = bb.targetInfo
 	if not t then return S.FAILURE end
 	if t.dist > bb.config.AttackRange then return S.FAILURE end   -- fora do alcance: deixa perseguir
+	if bb.self.sp ~= nil and bb.self.sp < (bb.config.DanceMinSP or 0) then return S.FAILURE end  -- só dança com SP suficiente
 	bb.persist.dance = not bb.persist.dance
 	if bb.persist.dance then
 		bb:setIntent("attack", { target = t.id })
@@ -129,31 +143,33 @@ reg.action("DanceAttack", function(bb, p)
 		bb:setIntent("move", { x = cx, y = cy, reason = "dance", target = t.id })
 	end
 	return S.RUNNING
-end, { desc = "Ataca o alvo enquanto reposiciona (dança): alterna golpe e passo lateral perto do alvo." })
+end, { desc = "Ataca o alvo enquanto reposiciona (dança): alterna golpe e passo lateral perto do alvo. 'gate' liga ao flag de config.", params = { gate = "string" }, optional = { "gate" } })
 
 -- Kiting: afasta-se do alvo para manter distância, sem ultrapassar o limite do dono.
 reg.action("Kite", function(bb, p)
+	if p and p.gate and not bb.config[p.gate] then return S.FAILURE end  -- ramo global respeita o flag (ex.: KiteMonsters)
 	local t = bb.targetInfo
 	if not t then return S.FAILURE end
-	local keep = (p and p.dist) or 5
+	local keep = (p and p.dist) or bb.config.KiteDist or 5
 	if t.dist >= keep then return S.FAILURE end           -- já está longe o bastante
-	local step = (p and p.step) or 2
-	local bounds = (p and p.bounds) or bb.config.MoveBounds
+	local step = (p and p.step) or bb.config.KiteStep or 2
+	local bounds = (p and p.bounds) or bb.config.KiteBounds or bb.config.MoveBounds
 	local cx, cy = util.awayFrom(bb.self.x, bb.self.y, t.x, t.y, step)
 	if bb.owner.exists and util.chebyshev(cx, cy, bb.owner.x, bb.owner.y) > bounds then
 		return S.FAILURE                                   -- não foge além do limite do dono
 	end
 	bb:setIntent("move", { x = cx, y = cy, reason = "kite", target = t.id })
 	return S.RUNNING
-end, { desc = "Afasta-se do alvo p/ manter a distância 'dist' (kiting), respeitando 'bounds' do dono.", params = { dist = "number", step = "number", bounds = "number" } })
+end, { desc = "Afasta-se do alvo p/ manter a distância 'dist' (kiting), respeitando 'bounds' do dono. 'gate' liga ao flag de config (ex.: KiteMonsters).", params = { dist = "number", step = "number", bounds = "number", gate = "string" }, optional = { "gate" } })
 
 -- Ataca o alvo atual. RUNNING enquanto o alvo existir.
-reg.action("AttackTarget", function(bb)
+reg.action("AttackTarget", function(bb, p)
+	if p and p.blockIf and bb.config[p.blockIf] then return S.FAILURE end  -- bloqueia o ataque normal (ex.: UseSkillOnly)
 	local t = bb.targetInfo
 	if not t then return S.FAILURE end
 	if t.dist > bb.config.AttackRange then return S.FAILURE end
 	bb:setIntent("attack", { target = t.id })
 	return S.RUNNING
-end, { desc = "Ataque normal no alvo atual." })
+end, { desc = "Ataque normal no alvo atual. 'blockIf' (chave de config) desliga o ataque normal (ex.: UseSkillOnly).", params = { blockIf = "string" }, optional = { "blockIf" } })
 
 return true

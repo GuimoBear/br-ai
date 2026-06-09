@@ -1,5 +1,6 @@
 local files = {
   "lua/src/data/monsters.lua",
+  "lua/src/data/action_skills.lua",
   "lua/src/bt/decorators.lua",
   "lua/src/bt/tree.lua",
   "lua/bootstrap.lua",

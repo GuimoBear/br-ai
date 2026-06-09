@@ -116,6 +116,15 @@ A árvore inteira é renderizada como uma lista indentada, e **cada nó é color
 
 Isso mostra de imediato **qual ramo a raiz escolheu** e por quê — combinado com a timeline, você "rebobina" até o tick onde o comportamento divergiu e vê exatamente qual condição falhou.
 
+### Skills de cada ação (filhos do nó)
+
+Cada **ação automática de skill** (ataque em área, ataque principal, buffs, cura, castling…) aparece com as **skills que ela resolve** para o homúnculo atual listadas como **filhos** logo abaixo dela — ✦ uma por skill (nome + nível). A skill **efetivamente usada naquele tick acende** (amarelo), então dá pra ver qual escolha o homún fez naquele momento. Dois avisos discretos (⚠) cobrem os casos sem skill:
+
+- **"este tipo não tem esta skill"** — o tipo de homúnculo não tem skill para aquele papel (ex.: o Dieter não tem ataque principal single-target). A ação é simplesmente ignorada.
+- **"nenhuma skill selecionada"** — o tipo até tem skills do papel, mas você as removeu todas na tela *Skills por homúnculo*; a ação não será usada até você selecionar pelo menos uma.
+
+**Clique** no nó da ação (ou no filho de skill) para ver a mensagem completa. As skills vêm da MESMA resolução que o motor usa de verdade (perfil + override da tela Skills + forma base do Homunculus S), então o que aparece é exatamente o que o homún fará.
+
 ## Skills e buffs ativos
 
 Um painel lista os **cooldowns** em andamento, os **buffs ativos** e os **FX de área** ainda no chão, cada um com uma barra de tempo restante. Útil para confirmar recasts de buff e janelas de recarga.

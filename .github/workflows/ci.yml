@@ -50,10 +50,14 @@ jobs:
           npm run persist-smoke
           npm run host-smoke
           npm run test:bridge
+          npm run test:ui
+          npm run test:buildtree
+          npm run test:buildtreeweb
           npm run test:luahost
           npm run test:s3
           npm run smoke:statichost
           npm run test:buildstatic
+          npm run test:migration
 
   lint:
     name: Lint (luacheck)
@@ -116,4 +120,20 @@ jobs:
 
       - name: Smoke ESTATICA (S3 backend + bundle Lua + regra de storage)
         run: npm run smoke:static-browser
+        working-directory: desktop
+
+      - name: Smoke feature "desativar no"
+        run: npm run smoke:disabled
+        working-directory: desktop
+
+      - name: Smoke editor (reparentar/reordenar)
+        run: npm run smoke:reparent
+        working-directory: desktop
+
+      - name: Smoke migracao (AzzyAI -> editor em browser real)
+        run: npm run smoke:migration
+        working-directory: desktop
+
+      - name: Smoke tela de Skills por homunculo
+        run: npm run smoke:skills
         working-directory: desktop

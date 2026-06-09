@@ -1,18 +1,10 @@
-/* static.css — só na versão estática. Limita a 960px e adapta o layout. */
-html, body { margin: 0; }
-#braibar, header, #controls, #toolbar, #app, .brai-static-bar {
-  max-width: 960px; margin-left: auto; margin-right: auto;
-}
-.brai-static-bar {
-  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
-  padding: 6px 10px; background: #0d1114; color: #cfd6dd;
-  border-bottom: 1px solid #263038; font: 13px system-ui, sans-serif;
-}
-.brai-static-bar button, .brai-static-bar label.file {
-  font: 13px system-ui; padding: 4px 10px; cursor: pointer;
-  background: #1b232a; color: #cfd6dd; border: 1px solid #2c3a44; border-radius: 4px;
-}
-.brai-static-bar .muted { color: #8a97a2; }
-.brai-static-bar input[type=file] { display: none; }
-/* Em telas estreitas, empilha o simulador (canvas em cima, painel embaixo). */
-@media (max-width: 980px) { #app { flex-direction: column; } #right { width: auto; } }
+/* static.css — só na versão estática. NÃO limita a largura (usa a largura total da tela).
+   Faz: ocultar comboboxes até upload, estilizar mensagens, e CENTRALIZAR o conteúdo
+   abaixo dos controles (mapa + painel), eliminando o vão à direita. Não toca o CSS compartilhado. */
+.brai-msg { font: 12px system-ui, sans-serif; margin-left: 6px; }
+.brai-msg.err { color: #ff6b6b; }
+.brai-msg.okmsg { color: #7CFC9A; }
+/* Comboboxes de seleção começam ocultos — aparecem após um upload válido. */
+#scnList, #btnScnLoad, #treeList, #btnOpen { display: none; }
+/* Centraliza mapa+painel; "safe" evita cortar o início quando o conteúdo é maior que a tela. */
+#app { justify-content: safe center; }

@@ -62,7 +62,7 @@ profiles[C.BAYERI] = {
 	defBuff = { S.MH_STEINWAND },
 }
 profiles[C.DIETER] = {
-	aoeAtk = S.MH_LAVA_SLIDE,             -- Dieter foca AoE; sem single-target
+	aoeAtk = { S.MH_LAVA_SLIDE, S.MH_BLAST_FORGE },  -- Dieter: 2 AoE padrão (prioridade: Lava Slide → Blast Forge)
 	offBuff = { S.MH_PYROCLASTIC },
 	defBuff = { S.MH_GRANITIC_ARMOR },
 	debuffAoE = S.MH_VOLCANIC_ASH,

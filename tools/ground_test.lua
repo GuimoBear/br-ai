@@ -29,7 +29,8 @@ check(fx.x ~= nil and fx.y ~= nil and fx.skill == SID.MH_LAVA_SLIDE, "efeito tra
 
 local total = fx.total
 -- some quando o tempo acaba
-disp("clearTree")   -- para de recastar, deixa o efeito existente expirar
+disp("clearTree")                    -- volta a arvore padrao
+disp("removeMonster", { id = 200 })  -- sem alvo: a AoE do Dieter (sem mainAtk) dispara ate em 1 alvo; sem alvo nao recasta
 for i=1, math.floor(total/50) + 3 do s = disp("step") end
 check(#s.ground == 0, "o destaque some quando o tempo acaba")
 

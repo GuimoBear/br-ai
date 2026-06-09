@@ -6,6 +6,7 @@ const treesIo = require('./trees_io');
 const scnIo = require('./scenarios_io');
 const monIo = require('./monsters_io');
 const skillIo = require('./skillchoice_io');
+const skillParamsIo = require('./skillparams_io');
 const summonIo = require('./summonchoice_io');
 const installer = require('./installer');
 
@@ -40,7 +41,7 @@ function createWindow() {
       nodeIntegration: false,
     },
   });
-  win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+  win.loadFile(path.join(__dirname, 'editor', 'index.html'));
 }
 
 app.whenReady().then(() => {
@@ -90,23 +91,38 @@ app.whenReady().then(() => {
       const payload = JSON.parse(payloadJson);
       const spec = payload.spec || payload;
       treesIo.writeFile(ROOT, name, 'tree_homun.lua', buildTree.generate(spec));
-      treesIo.writeFile(ROOT, name, 'config.lua', buildTree.generateConfig({ homunType: payload.homunType, baseType: payload.baseType }));
+      treesIo.writeFile(ROOT, name, 'config.lua', buildTree.generateConfig({ homunType: payload.homunType, baseType: payload.baseType, config: payload.config }));
       // emite tambem o catalogo de monstros/grupos (global) p/ os nos monsterCheck
       let catalog = { monsters: [], groups: [] };
-      try { catalog = JSON.parse(monIo.load(ROOT)); } catch (e) {}
-      treesIo.writeFile(ROOT, name, 'monsters.lua', buildTree.generateMonsters(catalog));
+      let monstersRaw = null;
+      try { monstersRaw = monIo.load(ROOT); catalog = JSON.parse(monstersRaw); } catch (e) {}
+      // #2: so escreve monsters.lua se a arvore usa monsterCheck (consistente com o pacote)
+      if (buildTree.treeUsesMonsterCheck(spec)) treesIo.writeFile(ROOT, name, 'monsters.lua', buildTree.generateMonsters(catalog));
       // emite a escolha de skills por homúnculo (global) p/ as ações automáticas
       let choices = { choices: {} };
-      try { choices = JSON.parse(skillIo.load(ROOT)); } catch (e) {}
-      treesIo.writeFile(ROOT, name, 'skill_choice.lua', buildTree.generateSkillChoice(choices));
+      let skillsRaw = null;
+      try { skillsRaw = skillIo.load(ROOT); choices = JSON.parse(skillsRaw); } catch (e) {}
+      // #3: expande p/ a escolha EFETIVA de TODOS os 9 homuns (defaults+overrides) via o host Lua,
+      // deixando o pacote auto-descritivo. Fallback p/ o JSON cru se o host falhar.
+      let effChoices = choices;
+      try { effChoices = { choices: JSON.parse(luaHost.dispatch('allSkillChoices', JSON.stringify(choices))) }; } catch (e) {}
+      treesIo.writeFile(ROOT, name, 'skill_choice.lua', buildTree.generateSkillChoice(effChoices));
       let summonChoices = { choices: {} };
       try { summonChoices = JSON.parse(summonIo.load(ROOT)); } catch (e) {}
       treesIo.writeFile(ROOT, name, 'summon_choice.lua', buildTree.generateSummonChoice(summonChoices));
+      let skillParams = { params: {} };
+      let skillParamsRaw = null;
+      try { skillParamsRaw = skillParamsIo.load(ROOT); skillParams = JSON.parse(skillParamsRaw); } catch (e) {}
+      treesIo.writeFile(ROOT, name, 'skill_params.lua', buildTree.generateSkillParams(skillParams));
       // monta o PACOTE auto-suficiente (runtime completo + gerados) + .zip
       const pkg = installer.buildPackage({
         root: ROOT, luaBase: LUA_BASE, name: name, spec: spec,
-        ctx: { homunType: payload.homunType, baseType: payload.baseType },
-        catalog: catalog, choices: choices, summonChoices: summonChoices, buildTree: buildTree, safeName: treesIo.safeName,
+        ctx: { homunType: payload.homunType, baseType: payload.baseType, config: payload.config },
+        catalog: catalog, choices: effChoices, summonChoices: summonChoices, skillParams: skillParams, buildTree: buildTree, safeName: treesIo.safeName,
+        sourceJson: {   // #6: JSONs-fonte (re-importacao) em source/ do pacote
+          tree: JSON.stringify({ name: treesIo.safeName(name), homunType: payload.homunType, baseType: payload.baseType, config: payload.config, spec: spec }, null, 2),
+          skills: skillsRaw, monsters: monstersRaw, skillParams: skillParamsRaw,
+        },
       });
       return { ok: true, name: treesIo.safeName(name), dist: pkg.distDir, zip: pkg.zipPath, files: pkg.fileCount };
     } catch (e) { return { ok: false, error: String(e.message || e) }; }
@@ -136,6 +152,13 @@ app.whenReady().then(() => {
   });
   ipcMain.handle('skillChoice:save', (_evt, jsonText) => {
     try { const r = skillIo.save(ROOT, jsonText); return { ok: true, path: r.path }; }
+    catch (e) { return { ok: false, error: String(e.message || e) }; }
+  });
+  ipcMain.handle('skillParams:load', () => {
+    try { return { ok: true, data: skillParamsIo.load(ROOT) }; } catch (e) { return { ok: false, error: String(e.message || e) }; }
+  });
+  ipcMain.handle('skillParams:save', (_evt, jsonText) => {
+    try { const r = skillParamsIo.save(ROOT, jsonText); return { ok: true, path: r.path }; }
     catch (e) { return { ok: false, error: String(e.message || e) }; }
   });
 

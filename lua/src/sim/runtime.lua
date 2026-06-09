@@ -576,7 +576,7 @@ function SIM.snapshot()
 		target = bb and bb.target or 0,
 		bb = bbview,
 		ground = ground,
-		tree = SIM.tree and BRAI.tree.snapshot(SIM.tree) or {},
+		tree = SIM.tree and BRAI.tree.snapshot(SIM.tree, bb) or {},
 		eleanor = eleanor,
 		sera = sera,
 		skills = bb and {
@@ -598,11 +598,43 @@ function SIM.load(scn)
 	if scn.config then
 		for k, v in pairs(scn.config) do SIM.bb.config[k] = v end
 	end
+	if SIM.userConfig then  -- config do editor (migração/painel) por cima do cenário
+		for k, v in pairs(SIM.userConfig) do SIM.bb.config[k] = v end
+	end
 	SIM.tree = BRAI.tree.build(SIM.customTree or BRAI.treeSpec)
 	SIM.log = {}
 	SIM.lastTarget = nil
 	SIM.lastDesc = nil
 	-- percepcao inicial para o frame 0 ja trazer self/owner/monstros
+	BRAI.perception.update(SIM.bb, SIM.world.homunId)
+end
+
+-- loadDist: replica a sequencia de carga do AI.lua (paridade dist<->jogo) SEM o cliente
+-- do RO. Em vez de dofile dos arquivos GERADOS, aplica os MESMOS dados na MESMA ordem:
+-- defaults do Blackboard -> mescla config (config.lua) -> setSkillChoice (skill_choice.lua)
+-- -> monsterGroups.load (monsters.lua, so se houver) -> tree.build (tree_homun.lua).
+-- Assim um bug que so aparece no pacote fica visivel ao teste (fecha a lacuna de cobertura).
+-- opts: { scenario, config=<userConfig|nil>, choices=<raw skill_choice|nil>, catalog=<monstros|nil>, spec=<treeSpec|nil> }
+function SIM.loadDist(opts)
+	opts = opts or {}
+	ro.bind(backend)
+	SIM.scenario = opts.scenario
+	SIM.world = buildWorld(opts.scenario)
+	SIM.bb = BRAI.Blackboard.new()                         -- defaults (BRAI.defaultConfig)
+	if opts.config then                                    -- config.lua: mescla por cima dos defaults
+		for k, v in pairs(opts.config) do SIM.bb.config[k] = v end
+	end
+	BRAI.setSkillChoice(opts.choices or {})                -- skill_choice.lua (vazio = so perfis)
+	BRAI.setSkillParams(opts.skillParams or {})            -- skill_params.lua (vazio = so config global)
+	-- monsters.lua: presente => carrega o catalogo; ausente (sem monsterCheck) => grupos vazios
+	-- (espelha o AI.lua: sem o arquivo, BRAI.monsterGroups fica no default do bootstrap = vazio)
+	BRAI.monsterGroups.load(opts.catalog or { monsters = {}, groups = {} })
+	SIM.customTree = opts.spec                             -- p/ reset/snapshot coerentes com o dist
+	SIM.userConfig = nil                                   -- dist NAO usa o config ao-vivo do painel
+	SIM.tree = BRAI.tree.build(opts.spec or BRAI.treeSpec) -- tree_homun.lua
+	SIM.log = {}
+	SIM.lastTarget = nil
+	SIM.lastDesc = nil
 	BRAI.perception.update(SIM.bb, SIM.world.homunId)
 end
 
@@ -627,8 +659,22 @@ function SIM_DISPATCH(method, argJson)
 		SIM.customTree = nil
 		if SIM.world then SIM.tree = BRAI.tree.build(BRAI.treeSpec) end
 		return json.encode({ ok = true })
+	elseif method == "setConfig" then
+		SIM.userConfig = arg or {}
+		if SIM.bb then for k, v in pairs(SIM.userConfig) do SIM.bb.config[k] = v end end
+		return json.encode({ ok = true })
+	elseif method == "defaultConfig" then
+		return json.encode(BRAI.defaultConfig())
+	elseif method == "lintLua" then
+		-- compila (sem executar) um trecho de Lua p/ validar a sintaxe dos artefatos gerados
+		local src = (arg and arg.text) or ""
+		local loadfn = load or loadstring
+		local f, err = loadfn(src, "=dist")
+		return json.encode({ ok = f ~= nil, error = err and tostring(err) or nil })
 	elseif method == "load" then
 		SIM.load(arg)
+	elseif method == "loadDist" then
+		SIM.loadDist(arg)
 	elseif method == "reset" then
 		SIM.load(SIM.scenario)
 	elseif method == "step" then
@@ -742,6 +788,28 @@ function SIM_DISPATCH(method, argJson)
 	elseif method == "roleConfig" then
 		-- candidatos + padrão + escolha por papel (p/ a tela "Skills por homúnculo")
 		return json.encode(BRAI.roleConfig(arg and arg.homunType or 0))
+	elseif method == "actionSkillsAll" then
+		-- skills efetivas + estado (ok|none|missing) das 8 ações automáticas, p/ o rótulo do nó
+		-- no editor (PLANO-SKILLS-NO-NO). bb sintético a partir de homunType/baseType do contexto.
+		local ht = (arg and arg.homunType) or 0
+		local bt = (arg and arg.baseType) or 0
+		local bb = { self = { homunType = ht }, config = { BaseHomunType = bt } }
+		local rc = (BRAI.roleConfig and BRAI.roleConfig(ht)) or {}
+		local out = {}
+		for action in pairs(BRAI.actionRole or {}) do
+			out[action] = BRAI.actionSkills(bb, action, rc)
+		end
+		return json.encode(out)
+	elseif method == "allSkillChoices" then
+		-- escolha EFETIVA por papel p/ os 9 homuns (auto-descritivo no pacote). arg = overrides crus (homun_skills.json)
+		return json.encode(BRAI.allSkillChoices(arg))
+	elseif method == "setSkillParams" then
+		-- parametros de skill por homunculo/papel (homun_skill_params.json)
+		BRAI.setSkillParams(arg or {})
+		return json.encode({ ok = true })
+	elseif method == "paramConfig" then
+		-- knobs por papel (default global + valor atual) + skills efetivas p/ o modal de parametros
+		return json.encode(BRAI.paramConfig(arg and arg.homunType or 0, arg and arg.baseType or 0))
 	elseif method == "summonInfo" then
 		return json.encode(BRAI.summonInfo(arg and arg.homunType or 0))
 	elseif method == "setSummonChoice" then

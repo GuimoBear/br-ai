@@ -7,6 +7,7 @@ local sys = BRAI.skillsys
 local util = BRAI.util
 
 local function prof(bb) return BRAI.profileFor(bb) end
+local function asList(v) if v == nil then return {} elseif type(v) == "table" then return v else return { v } end end
 local function usable(bb, skill, reserve)
 	if not skill or not sys.knows(bb, skill) then return nil end
 	local lvl = sys.knownLevel(bb, skill)
@@ -15,64 +16,139 @@ local function usable(bb, skill, reserve)
 	return lvl
 end
 
------------------------------------------------------------------- ofensivas
-reg.action("UseAoESkill", function(bb)
-	if not bb.config.UseAttackSkill then return S.FAILURE end
-	local p = prof(bb); local sk = p.aoeAtk
-	local lvl = usable(bb, sk, bb.config.AttackSkillReserveSP)
-	if not lvl then return S.FAILURE end
-	if not sys.inRange(bb, sk, lvl) then return S.FAILURE end
-	if sys.mobCount(bb, sk, lvl) < bb.config.AutoMobCount then return S.FAILURE end
-	sys.castIntent(bb, sk, lvl)
-	return S.SUCCESS
-end, { desc = "Usa a skill de AoE quando há mobs suficientes (AutoMobCount)." })
+-- Nível por papel (migrado da AzzyAI, via skill_choice → m.roleLevels). Só REBAIXA o nível
+-- de cast (nunca acima do conhecido); ausente => mantém o nível resolvido. Aditivo/retrocompatível.
+-- Nível efetivo de cast: skillLevels[skill] (por skill) > roleLevels[role] (por papel) > conhecido.
+-- Só REBAIXA (nunca acima do conhecido). Aditivo/retrocompatível.
+local function capSkill(bb, role, skill, lvl)
+	local p = prof(bb)
+	local want = (p.skillLevels and skill and p.skillLevels[skill]) or (p.roleLevels and p.roleLevels[role])
+	if want and want >= 1 and want < lvl then return want end
+	return lvl
+end
 
-reg.action("UseMainSkill", function(bb)
-	if not bb.config.UseAttackSkill then return S.FAILURE end
-	local p = prof(bb); local sk = p.mainAtk
-	local lvl = usable(bb, sk, bb.config.AttackSkillReserveSP)
-	if not lvl then return S.FAILURE end
-	if not sys.inRange(bb, sk, lvl) then return S.FAILURE end
+------------------------------------------------------------------ override de config por nó (#4)
+-- Precedência: param do nó (p) > param por homún/papel (skillParams) > Config global > default.
+-- Booleanos via `~= nil` (NÃO usar `or`, que confunde false com ausente). role = papel da ação
+-- (aoeAtk/mainAtk/offBuff/defBuff/healSelf/healOwner/ownerBuff/castling). [PLANO-GERACAO-LUA #4 / PLANO-CONFIG-SKILLS C0]
+local function effRole(p, bb, role, key)
+	if p and p[key] ~= nil then return p[key] end
+	local v = BRAI.skillParamFor and BRAI.skillParamFor(bb.self.homunType, role, key)
+	if v ~= nil then return v end
+	return bb.config[key]
+end
+
+------------------------------------------------------------------ ofensivas
+-- tenta conjurar UMA skill de AoE (a ação itera a lista de prioridade do papel)
+local function tryCastAoE(bb, sk, mobNeeded, p)
+	local lvl = usable(bb, sk, effRole(p, bb, "aoeAtk", "AttackSkillReserveSP"))
+	if not lvl then return false end
+	lvl = capSkill(bb, "aoeAtk", sk, lvl)
+	local fixed = effRole(p, bb, "aoeAtk", "AoEFixedLevel")
+	if fixed and fixed > 0 then
+		lvl = math.min(fixed, sys.knownLevel(bb, sk) or lvl)
+	end
+	if not sys.inRange(bb, sk, lvl) then return false end
+	local center, count = nil, sys.mobCount(bb, sk, lvl)
+	if effRole(p, bb, "aoeAtk", "AoEMaximizeTargets") and sys.aoeCenter(sk) == 0 then
+		local half = math.floor(sys.aoeSize(sk, lvl) / 2)
+		if half >= 1 then
+			local rng, best, bestN = sys.range(sk, lvl), nil, count
+			for _, c in ipairs(bb.monsters) do
+				if (c.dist or 0) <= rng then
+					local n = 0
+					for _, m in ipairs(bb.monsters) do if util.chebyshev(c.x, c.y, m.x, m.y) <= half then n = n + 1 end end
+					if n > bestN then best, bestN = c, n end
+				end
+			end
+			if best then center, count = { x = best.x, y = best.y }, bestN end
+		end
+	end
+	if count < mobNeeded then return false end
+	sys.castIntent(bb, sk, lvl, center)
+	return true
+end
+reg.action("UseAoESkill", function(bb, p)
+	if not effRole(p, bb, "aoeAtk", "UseAttackSkill") then return S.FAILURE end
+	if effRole(p, bb, "aoeAtk", "AutoMobMode") == 0 then return S.FAILURE end      -- AutoMobMode=0: sem AoE automática
+	-- Limiar de alvos: se o homún NÃO tem ataque single-target (mainAtk vazio — ex.: Dieter),
+	-- a AoE É a ofensiva principal e dispara com ≥1 alvo (limiar 1). Quem TEM mainAtk mantém
+	-- o AutoMobCount (economia de SP). Knobs aceitam override por nó (#4). [PLANO-GERACAO-LUA #1/#4]
+	local mobNeeded = effRole(p, bb, "aoeAtk", "AutoMobCount")
+	if #asList(prof(bb).mainAtk) == 0 then mobNeeded = 1 end
+	for _, sk in ipairs(asList(prof(bb).aoeAtk)) do                  -- lista de prioridade: conjura a 1ª utilizável
+		if tryCastAoE(bb, sk, mobNeeded, p) then return S.SUCCESS end
+	end
+	return S.FAILURE
+end, { desc = "Usa a 1ª AoE utilizável da lista (prioridade). Sem mainAtk (Dieter), a AoE é a ofensiva principal e dispara com ≥1 alvo; com mainAtk exige AutoMobCount alvos. AutoMobMode=0 desliga; AoEFixedLevel fixa o nível; AoEMaximizeTargets mira no aglomerado. Knobs: override por nó > Config global.",
+	params = { UseAttackSkill = "boolean", AutoMobMode = "number", AutoMobCount = "number", AttackSkillReserveSP = "number", AoEFixedLevel = "number", AoEMaximizeTargets = "boolean" },
+	optional = { "UseAttackSkill", "AutoMobMode", "AutoMobCount", "AttackSkillReserveSP", "AoEFixedLevel", "AoEMaximizeTargets" } })
+
+-- tenta conjurar UMA skill principal (a ação itera a lista de prioridade do papel)
+local function tryCastMain(bb, sk, p)
+	local lvl = usable(bb, sk, effRole(p, bb, "mainAtk", "AttackSkillReserveSP"))
+	if not lvl then return false end
+	lvl = capSkill(bb, "mainAtk", sk, lvl)
+	if not sys.inRange(bb, sk, lvl) then return false end
+	if bb.targetInfo then
+		local inMelee = bb.targetInfo.dist <= effRole(p, bb, "mainAtk", "AttackRange")
+		if inMelee and effRole(p, bb, "mainAtk", "UseHomunSSkillAttack") == false then return false end
+		if (not inMelee) and effRole(p, bb, "mainAtk", "UseHomunSSkillChase") == false then return false end
+	end
 	sys.castIntent(bb, sk, lvl)
-	return S.SUCCESS
-end, { desc = "Usa a skill ofensiva single-target no alvo." })
+	return true
+end
+reg.action("UseMainSkill", function(bb, p)
+	if not effRole(p, bb, "mainAtk", "UseAttackSkill") then return S.FAILURE end
+	for _, sk in ipairs(asList(prof(bb).mainAtk)) do                 -- lista de prioridade: conjura a 1ª utilizável
+		if tryCastMain(bb, sk, p) then return S.SUCCESS end
+	end
+	return S.FAILURE
+end, { desc = "Usa a 1ª skill single-target utilizável da lista (prioridade). Gates: UseHomunSSkillAttack (em alcance) / UseHomunSSkillChase (aproximando). Knobs: override por nó > Config global.",
+	params = { UseAttackSkill = "boolean", AttackSkillReserveSP = "number", AttackRange = "number", UseHomunSSkillAttack = "boolean", UseHomunSSkillChase = "boolean" },
+	optional = { "UseAttackSkill", "AttackSkillReserveSP", "AttackRange", "UseHomunSSkillAttack", "UseHomunSSkillChase" } })
 
 ------------------------------------------------------------------ buffs (self)
-local function tryBuffList(bb, listed, enabled)
+local function tryBuffList(bb, listed, enabled, role)
 	if not enabled or not listed then return S.FAILURE end
 	for _, sk in ipairs(listed) do
 		if not sys.buffActive(bb, sk) then
 			local lvl = usable(bb, sk, 0)
-			if lvl then sys.castIntent(bb, sk, lvl); return S.SUCCESS end
+			if lvl then
+				lvl = capSkill(bb, role, sk, lvl)
+				sys.castIntent(bb, sk, lvl); return S.SUCCESS
+			end
 		end
 	end
 	return S.FAILURE
 end
-reg.action("UseOffensiveBuff", function(bb)
-	return tryBuffList(bb, prof(bb).offBuff, bb.config.UseOffensiveBuff)
-end, { desc = "Recasta auto-buffs ofensivos expirados (Bloodlust, Flitting, Pyroclastic, ...)." })
-reg.action("UseDefensiveBuff", function(bb)
-	return tryBuffList(bb, prof(bb).defBuff, bb.config.UseDefensiveBuff)
-end, { desc = "Recasta auto-buffs defensivos expirados (Amistr Bulwark, Granitic Armor, ...)." })
+reg.action("UseOffensiveBuff", function(bb, p)
+	return tryBuffList(bb, prof(bb).offBuff, effRole(p, bb, "offBuff", "UseOffensiveBuff"), "offBuff")
+end, { desc = "Recasta auto-buffs ofensivos expirados (Bloodlust, Flitting, Pyroclastic, ...). Knob UseOffensiveBuff: override por nó > Config global.",
+	params = { UseOffensiveBuff = "boolean" }, optional = { "UseOffensiveBuff" } })
+reg.action("UseDefensiveBuff", function(bb, p)
+	return tryBuffList(bb, prof(bb).defBuff, effRole(p, bb, "defBuff", "UseDefensiveBuff"), "defBuff")
+end, { desc = "Recasta auto-buffs defensivos expirados (Amistr Bulwark, Granitic Armor, ...). Knob UseDefensiveBuff: override por nó > Config global.",
+	params = { UseDefensiveBuff = "boolean" }, optional = { "UseDefensiveBuff" } })
 
 ------------------------------------------------------------------ cura
-reg.action("UseHealSelf", function(bb)
-	if not bb.config.UseAutoHeal then return S.FAILURE end
+reg.action("UseHealSelf", function(bb, np)
+	if not effRole(np, bb, "healSelf", "UseAutoHeal") then return S.FAILURE end
 	local p = prof(bb)
 	local sk = p.healSelfSkill
 	if not sk then return S.FAILURE end
-	if bb.self.hpPct >= bb.config.HealSelfHP then return S.FAILURE end
+	if bb.self.hpPct >= effRole(np, bb, "healSelf", "HealSelfHP") then return S.FAILURE end
 	local lvl = usable(bb, sk, 0); if not lvl then return S.FAILURE end
 	bb:setIntent("skill", { skill = sk, level = lvl, target = bb.self.id, mode = 0, reason = sys.name(sk), heal = "self" })
 	return S.SUCCESS
 end, { desc = "Cura a si quando HP% < HealSelfHP (Chaotic Blessing)." })
 
-reg.action("UseHealOwner", function(bb)
-	if not bb.config.UseAutoHeal then return S.FAILURE end
+reg.action("UseHealOwner", function(bb, np)
+	if not effRole(np, bb, "healOwner", "UseAutoHeal") then return S.FAILURE end
 	local p = prof(bb)
 	local sk = p.healOwnerSkill
 	if not (sk and bb.owner.exists) then return S.FAILURE end
-	if bb.owner.hpPct == nil or bb.owner.hpPct >= bb.config.HealOwnerHP then return S.FAILURE end
+	if bb.owner.hpPct == nil or bb.owner.hpPct >= effRole(np, bb, "healOwner", "HealOwnerHP") then return S.FAILURE end
 	local lvl = usable(bb, sk, 0); if not lvl then return S.FAILURE end
 	if bb.owner.dist > sys.range(sk, lvl) and sys.range(sk, lvl) > 0 then return S.FAILURE end
 	bb:setIntent("skill", { skill = sk, level = lvl, target = bb.owner.id, mode = 1, reason = sys.name(sk), heal = "owner" })
@@ -80,9 +156,9 @@ reg.action("UseHealOwner", function(bb)
 end, { desc = "Cura o dono quando HP% < HealOwnerHP (Healing Hands/Silent Breeze/Chaotic)." })
 
 ------------------------------------------------------------------ buff no dono (Painkiller)
-reg.action("UseOwnerBuff", function(bb)
+reg.action("UseOwnerBuff", function(bb, np)
 	local p = prof(bb)
-	if not (bb.config.UseOwnerBuff and p.ownerBuff and bb.owner.exists) then return S.FAILURE end
+	if not (effRole(np, bb, "ownerBuff", "UseOwnerBuff") and p.ownerBuff and bb.owner.exists) then return S.FAILURE end
 	if sys.buffActive(bb, p.ownerBuff) then return S.FAILURE end
 	local lvl = usable(bb, p.ownerBuff, 0); if not lvl then return S.FAILURE end
 	if bb.owner.dist > sys.range(p.ownerBuff, lvl) then return S.FAILURE end
@@ -179,13 +255,13 @@ BRAI.sera = { decide = seraDecide, legionAlive = legionAlive, legionCount = legi
 	summonLevel = summonLevel, legionSufficient = legionSufficient, enemiesInRange = enemiesInRange, mergeSummonParams = mergeSummonParams }
 
 ------------------------------------------------------------------ castling (Amistr)
-reg.action("UseCastling", function(bb)
+reg.action("UseCastling", function(bb, np)
 	local p = prof(bb)
-	if not (bb.config.UseCastling and p.castling and bb.owner.exists) then return S.FAILURE end
+	if not (effRole(np, bb, "castling", "UseCastling") and p.castling and bb.owner.exists) then return S.FAILURE end
 	-- conta monstros no dono
 	local n = 0
 	for _, m in ipairs(bb.monsters) do if m.target == bb.owner.id then n = n + 1 end end
-	if n < bb.config.CastleDefendThreshold then return S.FAILURE end
+	if n < effRole(np, bb, "castling", "CastleDefendThreshold") then return S.FAILURE end
 	local lvl = usable(bb, p.castling, 0); if not lvl then return S.FAILURE end
 	bb:setIntent("skill", { skill = p.castling, level = lvl, target = bb.owner.id, mode = 0, reason = "Castling", castling = true })
 	return S.SUCCESS
@@ -383,11 +459,22 @@ local function comboStep(bb, style, window)
 	return step, chain
 end
 
+-- Precedência dos params do combo: param do nó (p) > padrão salvo da tela (comboChoiceFor) > config/hardcoded.
+local function mergeCombo(bb, p)
+	local d = (BRAI.comboChoiceFor and BRAI.comboChoiceFor(bb.self.homunType)) or {}
+	if not next(d) then return p end                     -- sem padrão salvo → comportamento atual
+	local m = {}
+	for k, v in pairs(d) do m[k] = v end
+	if p then for k, v in pairs(p) do m[k] = v end end   -- o nó (árvore) vence o padrão
+	return m
+end
+
 reg.action("UseEleanorOffense", function(bb, p)
 	if bb.self.homunType ~= ELEANOR then return S.FAILURE end
 	if not bb.target then bb.persist.combo = nil; bb.persist.grappleRooted = false; return S.FAILURE end   -- alvo morto/sumiu (R1)
+	p = mergeCombo(bb, p)   -- aplica o padrão da tela; params do nó têm precedência
 
-	local allowSwitch = not (p and p.allowStyleSwitch == false)
+	local allowSwitch = not (p and p.allowStyleSwitch == false) and not bb.config.EleanorDoNotSwitchMode  -- trava de estilo (migrada)
 	local es = ensureStyle(bb, desiredStyle(bb, p), allowSwitch)
 	if es == "switched" then return S.SUCCESS end                       -- gastou o tick trocando
 	local style = (es == "ok") and desiredStyle(bb, p) or currentStyle(bb)

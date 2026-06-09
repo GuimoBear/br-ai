@@ -17,8 +17,9 @@ function BRAI.effectiveRange(bb)
 			end
 		end
 	end
-	consider(p.mainAtk)
-	consider(p.aoeAtk)
+	local function asList(v) if v == nil then return {} elseif type(v) == "table" then return v else return { v } end end
+	for _, sk in ipairs(asList(p.mainAtk)) do consider(sk) end   -- papel pode ter LISTA de skills (alcance = o maior)
+	for _, sk in ipairs(asList(p.aoeAtk)) do consider(sk) end
 	return r
 end
 

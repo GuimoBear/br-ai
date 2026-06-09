@@ -34,10 +34,11 @@ disp("load", scenario(C.DIETER, C.VANILMIRTH, 1000, { { x = 25, y = 20 } }))
 local s = runUntil(isSkill(SID.HVAN_CAPRICE))
 check(s.intent and s.intent.skill == SID.HVAN_CAPRICE, "Dieter base Vanilmirth usa Caprice em alvo unico")
 
--- Dieter SEM base: alvo unico nao tem skill single -> ataque normal (melee)
+-- Dieter SEM base, alvo unico: sem mainAtk, a AoE e a ofensiva principal -> Lava Slide
+-- (PLANO-GERACAO-LUA #1: a AoE dispara em alvo unico quando nao ha single-target)
 disp("load", scenario(C.DIETER, 0, 1000, { { x = 21, y = 20 } }))
-s = runUntil(function(it) return it and (it.kind == "attack" or (it.kind == "skill" and it.skill == SID.MH_LAVA_SLIDE)) end)
-check(s.intent and s.intent.kind == "attack", "Dieter sem base usa ataque normal em alvo unico")
+s = runUntil(isSkill(SID.MH_LAVA_SLIDE))
+check(s.intent and s.intent.kind == "skill" and s.intent.skill == SID.MH_LAVA_SLIDE, "Dieter sem base usa AoE (Lava Slide) em alvo unico [#1]")
 
 -- Dieter base Amistr: dono cercado -> Castling (skill da base Amistr)
 disp("load", scenario(C.DIETER, C.AMISTR, 1000, { { x = 9, y = 10 }, { x = 11, y = 10 }, { x = 10, y = 9 } }))

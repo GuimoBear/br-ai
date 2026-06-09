@@ -80,7 +80,7 @@ function bt.check(name, params, child, label)
 			return S.FAILURE
 		end
 		if not fn(bb, self.params) then return S.FAILURE end
-		if not self.child then return S.SUCCESS end
+		if not self.child or self.child.disabled then return S.SUCCESS end
 		return self.child:tick(bb)
 	end)
 	n.name = name
@@ -103,7 +103,7 @@ function bt.monsterCheck(monster, group, negate, child, label)
 		local matched = BRAI.monsterGroups.matches(self.monster, self.group, etype)
 		if self.negate then matched = not matched end
 		if not matched then return S.FAILURE end
-		if not self.child then return S.SUCCESS end
+		if not self.child or self.child.disabled then return S.SUCCESS end
 		return self.child:tick(bb)
 	end)
 	n.monster = monster or 0

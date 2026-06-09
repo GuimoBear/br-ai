@@ -41,6 +41,11 @@ pcall(function()
 	dofile(BRAI_BASE .. "/src/summon_choice.lua")
 end)
 
+-- Carrega os parametros de skill por homunculo/papel (src/skill_params.lua). Opcional.
+pcall(function()
+	dofile(BRAI_BASE .. "/src/skill_params.lua")
+end)
+
 local tree = BRAI.tree.build(BRAI.treeSpec)
 
 -- Lê um comando do dono (se houver) para bb.command.

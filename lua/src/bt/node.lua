@@ -8,14 +8,21 @@ local S = BRAI.status
 local bt = BRAI.bt
 
 -- Cria um nó base. `tickfn(self, bb)` deve devolver um status.
+-- Se o nó (ou um ancestral) estiver DESATIVADO (self.disabled), ele NÃO executa:
+-- devolve FAILURE sem tocar no tickfn, então os filhos também não são ticados.
 function bt.node(kind, label, tickfn)
 	local n = {
 		kind = kind,
 		label = label or kind,
 		children = {},
 		lastStatus = nil,
+		disabled = false,
 	}
 	n.tick = function(self, bb)
+		if self.disabled then
+			self.lastStatus = S.FAILURE
+			return S.FAILURE
+		end
 		local st = tickfn(self, bb)
 		self.lastStatus = st
 		return st

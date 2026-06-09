@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Abre direto no simulador (como o app Electron). Fallback: meta refresh + links abaixo. -->
-  <meta http-equiv="refresh" content="0; url=./sim.html" />
+  <!-- Abre direto no editor (tela principal). Fallback: meta refresh + links abaixo. -->
+  <meta http-equiv="refresh" content="0; url=./editor.html" />
   <title>BR-AI — versão web</title>
-  <script>location.replace('./sim.html');</script>
+  <script>location.replace('./editor.html');</script>
   <style>
     body { margin:0; font:15px/1.6 system-ui, sans-serif; background:#0d1013; color:#dfe5ea; }
     .wrap { max-width:720px; margin:0 auto; padding:40px 24px; }
@@ -15,8 +15,8 @@
 </head>
 <body>
   <div class="wrap">
-    <p>Abrindo o <strong>simulador</strong>… Se o redirecionamento não acontecer, clique:
-      <a href="./sim.html">Simulador</a> · <a href="./editor.html">Editor de árvores</a>.</p>
+    <p>Abrindo o <strong>editor</strong>… Se o redirecionamento não acontecer, clique:
+      <a href="./editor.html">Editor de árvores</a> · <a href="./sim.html">Simulador</a>.</p>
   </div>
 </body>
 </html>

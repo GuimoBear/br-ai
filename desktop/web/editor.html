@@ -20,11 +20,13 @@
   <header>
     <strong>BR-AI</strong> · Editor de Árvores <span class="tag">web</span>
     <a class="nav" href="./sim.html">← Simulador</a>
+    <a class="nav" href="./migrar.html" title="Migrar uma AzzyAI">🧬 Migrar AzzyAI</a>
     <span id="valid" class="valid"></span>
     <span id="status" class="status"></span>
   </header>
 
   <div id="toolbar">
+    <div id="tbRow1">
     <select id="addKind" title="Tipo de nó a adicionar">
       <optgroup label="Composite"><option value="selector">selector</option><option value="sequence">sequence</option><option value="parallel">parallel</option></optgroup>
       <optgroup label="Decorator"><option value="inverter">inverter</option><option value="succeeder">succeeder</option><option value="cooldown">cooldown</option><option value="limiter">limiter</option></optgroup>
@@ -53,11 +55,17 @@
     <button id="btnOpen">Abrir</button>
     <button id="btnSaveTree">Salvar</button>
     <button id="btnBuildTree">Gerar Lua</button>
-    <button id="btnMonsters" title="Cadastro de monstros e grupos">Monstros</button>
-    <button id="btnSkills" title="Escolher skills por homúnculo (Homunculus S)">Skills</button>
-    <button id="btnCombos" title="Configurar os combos da Eleanor (Homunculus S)">Combos</button>
     <button id="btnLoadDefault" title="Carregar a árvore padrão embutida">Padrão</button>
     <button id="btnSimulate" class="primary">▶ Simular</button>
+    </div>
+    <div id="tbRow2">
+      <span class="tb-grp">Configurações:</span>
+      <button id="btnMonsters" title="Cadastro de monstros e grupos">Monstros</button>
+      <button id="btnSkills" title="Escolher skills por homúnculo (Homunculus S)">Skills</button>
+      <button id="btnSkillParams" title="Parâmetros das skills por homúnculo (AutoMobCount, HealSelfHP, ...)">Parâmetros</button>
+      <button id="btnCombos" title="Configurar os combos da Eleanor (Homunculus S)">Combos</button>
+      <button id="btnConfig" title="Ajustes do H_Config (vão p/ o config.lua e o simulador)">Config</button>
+    </div>
   </div>
 
   <div id="app">

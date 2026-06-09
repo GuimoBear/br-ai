@@ -200,13 +200,14 @@ function sys.buffActive(bb, skill)
 end
 
 -- emite a intencao de skill conforme o modo de alvo
-function sys.castIntent(bb, skill, level)
+function sys.castIntent(bb, skill, level, center)
 	local mode = sys.targetMode(skill)
 	if mode == 0 then
 		bb:setIntent("skill", { skill = skill, level = level, target = bb.self.id, mode = 0, reason = sys.name(skill) })
 	elseif mode == 2 then
 		local x, y = bb.self.x, bb.self.y
 		if sys.aoeCenter(skill) == 0 and bb.targetInfo then x, y = bb.targetInfo.x, bb.targetInfo.y end
+		if center then x, y = center.x, center.y end   -- override do centro (ex.: AoEMaximizeTargets)
 		bb:setIntent("skill", { skill = skill, level = level, x = x, y = y, mode = 2, reason = sys.name(skill) })
 	else
 		bb:setIntent("skill", { skill = skill, level = level, target = bb.target, mode = 1, reason = sys.name(skill) })

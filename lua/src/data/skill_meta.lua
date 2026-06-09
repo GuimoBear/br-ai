@@ -138,6 +138,15 @@ function BRAI.comboInfo()
 	end
 	out.defaults = { style = "power", window = 2000, autoComboSpheres = 5,
 		grappleThreatLimit = 1, minGap = 0, allowStyleSwitch = true }
+	-- mescla o padrão salvo (comboChoiceFor usa 'comboSpheres') sobre os defaults (a UI usa 'autoComboSpheres')
+	local saved = (BRAI.comboChoiceFor and BRAI.comboChoiceFor(C.ELEANOR)) or {}
+	if saved.style ~= nil then out.defaults.style = saved.style end
+	if saved.window ~= nil then out.defaults.window = saved.window end
+	if saved.comboSpheres ~= nil then out.defaults.autoComboSpheres = saved.comboSpheres end
+	if saved.grappleThreatLimit ~= nil then out.defaults.grappleThreatLimit = saved.grappleThreatLimit end
+	if saved.minGap ~= nil then out.defaults.minGap = saved.minGap end
+	if saved.allowStyleSwitch ~= nil then out.defaults.allowStyleSwitch = saved.allowStyleSwitch end
+	out.savedLevels = saved.levels   -- níveis por elo salvos (a UI reflete)
 	return out
 end
 
