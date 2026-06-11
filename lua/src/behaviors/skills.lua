@@ -161,10 +161,15 @@ reg.action("UseOwnerBuff", function(bb, np)
 	if not (effRole(np, bb, "ownerBuff", "UseOwnerBuff") and p.ownerBuff and bb.owner.exists) then return S.FAILURE end
 	if sys.buffActive(bb, p.ownerBuff) then return S.FAILURE end
 	local lvl = usable(bb, p.ownerBuff, 0); if not lvl then return S.FAILURE end
+	if sys.targetMode(p.ownerBuff) == 0 then
+		-- self-cast cujo efeito vale p/ o dono (Goldene Tone do Bayeri): sem checagem de alcance
+		bb:setIntent("skill", { skill = p.ownerBuff, level = lvl, target = bb.self.id, mode = 0, reason = sys.name(p.ownerBuff) })
+		return S.SUCCESS
+	end
 	if bb.owner.dist > sys.range(p.ownerBuff, lvl) then return S.FAILURE end
 	bb:setIntent("skill", { skill = p.ownerBuff, level = lvl, target = bb.owner.id, mode = 1, reason = sys.name(p.ownerBuff) })
 	return S.SUCCESS
-end, { desc = "Mantém buff no dono (Painkiller da Sera)." })
+end, { desc = "Mantém buff no dono (Painkiller da Sera; Goldene Tone do Bayeri é self-cast)." })
 
 ------------------------------------------------------------------ invocação (Sera — Legião)
 -- Decisão pura de (re)invocar a Legião. Usa o ESTIMADOR (Fase 1: perception/skillsys),

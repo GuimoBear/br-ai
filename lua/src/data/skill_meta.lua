@@ -56,6 +56,14 @@ local meta = {
 	[S.MH_TEMPERING]       = { iro = "Tempering",           cat = "buff",    role = "offBuff",    desc = "Buff ofensivo: aumenta dano de fogo / resistência." },
 	[S.MH_BLAZING_AND_FURIOUS]={ iro = "Blazing and Furious", cat = "aoe",     role = "special",    desc = "Avança e dá dano físico em área (ignora DEF); consome TODAS as esferas." },
 	[S.MH_THE_ONE_FIGHTER_RISES]={ iro = "The One Fighter Rises", cat = "aoe", role = "special",    desc = "Dano físico em área em volta da Eleanor (ignora DEF); enche as esferas ao máximo." },
+	-- lvl 200+
+	[S.MH_TWISTER_CUTTER]  = { iro = "Twister Cutter",      cat = "single",  role = "mainAtk",    desc = "Dano mágico de Vento de alvo único (ignora DEFM, alcance 7)." },
+	[S.MH_ABSOLUTE_ZEPHYR] = { iro = "Absolute Zephyr",     cat = "aoe",     role = "aoeAtk",     desc = "Dano mágico Neutro em área ao redor do alvo (ignora DEFM)." },
+	[S.MH_TOXIN_OF_MANDARA]= { iro = "Toxin of Mandara",    cat = "aoe",     role = "aoeAtk",     desc = "Dano físico em área ao redor do alvo (ignora DEF); aplica Neurotoxina (efeito só in-game)." },
+	[S.MH_NEEDLE_STINGER]  = { iro = "Needle Stinger",      cat = "single",  role = "mainAtk",    desc = "Dano físico de Veneno a distância (ignora DEF, alcance 7)." },
+	[S.MH_GLANZEN_SPIES]   = { iro = "Glanzen Spies",       cat = "single",  role = "mainAtk",    desc = "Dano físico Sagrado corpo a corpo (ignora DEF)." },
+	[S.MH_HEILIGE_PFERD]   = { iro = "Heilige Pferd",       cat = "aoe",     role = "aoeAtk",     desc = "Dano mágico Sagrado em área em volta do Bayeri (ignora DEFM)." },
+	[S.MH_GOLDENE_TONE]    = { iro = "Goldene Tone",        cat = "buff",    role = "ownerBuff",  desc = "Buff no dono: aumenta RES e RESM (conjurado em si mesmo)." },
 }
 
 local function targetName(skill)

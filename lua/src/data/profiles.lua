@@ -60,6 +60,7 @@ profiles[C.BAYERI] = {
 	aoeAtk = S.MH_HEILIGE_STANGE,
 	offBuff = { S.MH_GOLDENE_FERSE, S.MH_ANGRIFFS_MODUS },
 	defBuff = { S.MH_STEINWAND },
+	ownerBuff = S.MH_GOLDENE_TONE,        -- Goldene Tone (self-cast; o buff vale p/ o dono)
 }
 profiles[C.DIETER] = {
 	aoeAtk = { S.MH_LAVA_SLIDE, S.MH_BLAST_FORGE },  -- Dieter: 2 AoE padrão (prioridade: Lava Slide → Blast Forge)

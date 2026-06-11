@@ -162,5 +162,28 @@ fx[S.MH_THE_ONE_FIGHTER_RISES]= { kind = "physical", dmg = seq(580,580,10),
 	note = "Dano físico em área em volta da Eleanor (ignora DEF); enche as esferas ao máximo.",
 	desc = {"580% ATK · 3x3","1160% · 3x3","1740% · 3x3","2320% · 3x3","2900% · 5x5","3480% · 5x5","4060% · 5x5","4640% · 5x5","5220% · 7x7","5800% · 7x7"} }
 
+-- ===== LVL 200+ (Renewal/LATAM; dados conferidos no divine-pride servidor LATAM) =====
+fx[S.MH_TWISTER_CUTTER] = { kind = "magic", dmg = seq(480,480,10),
+	note = "Dano mágico de Vento de alvo único (alcance 7, ignora MDEF).",
+	desc = {"480% MATK","960%","1.440%","1.920%","2.400%","2.880%","3.360%","3.840%","4.320%","4.800%"} }
+fx[S.MH_ABSOLUTE_ZEPHYR] = { kind = "magic", dmg = seq(1450,450,10),
+	note = "Dano mágico Neutro em área ao redor do alvo (ignora MDEF).",
+	desc = {"1.450% MATK · 3x3","1.900% · 3x3","2.350% · 3x3","2.800% · 5x5","3.250% · 5x5","3.700% · 5x5","4.150% · 7x7","4.600% · 7x7","5.050% · 7x7","5.500% · 9x9"} }
+fx[S.MH_TOXIN_OF_MANDARA] = { kind = "physical", dmg = seq(850,450,10),
+	note = "Dano físico em área ao redor do alvo (ignora DEF); aplica Neurotoxina (RES-, efeito só in-game).",
+	desc = {"850% ATK · 3x3","1.300% · 3x3","1.750% · 3x3","2.200% · 5x5","2.650% · 5x5","3.100% · 5x5","3.550% · 7x7","4.000% · 7x7","4.450% · 7x7","4.900% · 9x9"} }
+fx[S.MH_NEEDLE_STINGER] = { kind = "physical", dmg = seq(700,500,10),
+	note = "Dano físico de Veneno a distância (alcance 7, ignora DEF).",
+	desc = {"700% ATK","1.200%","1.700%","2.200%","2.700%","3.200%","3.700%","4.200%","4.700%","5.200%"} }
+fx[S.MH_GLANZEN_SPIES] = { kind = "physical", dmg = seq(750,450,10),
+	note = "Dano físico Sagrado corpo a corpo de alvo único (ignora DEF).",
+	desc = {"750% ATK","1.200%","1.650%","2.100%","2.550%","3.000%","3.450%","3.900%","4.350%","4.800%"} }
+fx[S.MH_HEILIGE_PFERD] = { kind = "magic", dmg = seq(1550,350,10),
+	note = "Dano mágico Sagrado em área em volta do Bayeri (ignora MDEF).",
+	desc = {"1.550% MATK · 3x3","1.900% · 3x3","2.250% · 3x3","2.600% · 3x3","2.950% · 5x5","3.300% · 5x5","3.650% · 5x5","4.000% · 5x5","4.350% · 7x7","4.700% · 7x7"} }
+fx[S.MH_GOLDENE_TONE] = { kind = "buff",
+	note = "Buff no dono: aumenta RES e RESM (conjurado em si mesmo).",
+	desc = {"RES/RESM +3, 30s","+6, 40s","+9, 50s","+12, 60s","+15, 70s","+18, 80s","+21, 90s","+24, 100s","+27, 110s","+30, 120s"} }
+
 BRAI.skillFx = fx
 return fx
