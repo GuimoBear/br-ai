@@ -153,27 +153,36 @@ try {
 
 // ============================================================================
 // ============================================================================
-console.log('TESTE 6 — arquivo de cenário IGNORA o homúnculo (não persiste info do homún)');
+console.log('TESTE 6 — arquivo de cenário remove só o TIPO do homúnculo (mantém HP/SP/ATK/MATK/posição)');
 {
   const ssX = makeSession();
   const docX = makeDoc(), winX = makeWin(ssX);
   const pX = loadPage(winX, docX, ssX);
   docX.getElementById('homun').value = '52'; docX.getElementById('base').value = '3';
+  pX.SCENARIO.config = { BaseHomunType: 3, AggroDist: 12 };
   pX.frames = [{ grid: { w: 40, h: 40 }, entities: [
     { id: 1, kind: 'owner', x: 10, y: 10, hp: 1000, maxhp: 1000 },
-    { id: 100, kind: 'homun', x: 20, y: 20, hp: 100, maxhp: 100, sp: 100, maxsp: 100, homunType: 52, motion: 0 },
+    { id: 100, kind: 'homun', x: 22, y: 21, hp: 100, maxhp: 100, sp: 100, maxsp: 100, atk: 30, matk: 45, motion: 0 },
     { id: 200, kind: 'monster', x: 24, y: 23, hp: 60, maxhp: 60, atk: 6, aggro: 9, etype: 1042, aggressive: true, motion: 0 },
   ] }];
   const full = pX.captureScenario(pX.frames[0]);
   const file = pX.scenarioForFile(full);
-  // a captura de SESSÃO mantém o homún (handoff editor->sim)
-  ok(!!full.entities.find(e => e.kind === 'homun'), 'sessão (captureScenario) AINDA tem o homún');
-  ok(full.homunType === 52, 'sessão mantém homunType');
-  // o ARQUIVO não tem nada do homún
-  ok(!file.entities.find(e => e.kind === 'homun'), 'arquivo: SEM entidade homún');
-  ok(file.homunType === undefined && file.baseType === undefined, 'arquivo: SEM homunType/baseType');
+  const fh = full.entities.find(e => e.kind === 'homun');
+  const xh = file.entities.find(e => e.kind === 'homun');
+  ok(fh && fh.homunType === 52, 'sessão (captureScenario) mantém o TIPO do homún');
+  // arquivo: homún PRESENTE com stats e posição, mas SEM tipo
+  ok(!!xh, 'arquivo: homún PRESENTE');
+  ok(xh && xh.hp === 100 && xh.maxhp === 100 && xh.sp === 100 && xh.maxsp === 100, 'arquivo: homún MANTÉM HP/SP');
+  ok(xh && xh.atk === 30 && xh.matk === 45, 'arquivo: homún MANTÉM ATK/MATK');
+  ok(xh && xh.x === 22 && xh.y === 21, 'arquivo: homún MANTÉM posição');
+  ok(xh && xh.homunType === undefined, 'arquivo: homún SEM homunType (tipo removido)');
+  // tipos no topo e na config removidos
+  ok(file.homunType === undefined && file.baseType === undefined, 'arquivo: SEM homunType/baseType no topo');
   ok(!file.config || file.config.BaseHomunType === undefined, 'arquivo: SEM config.BaseHomunType');
-  ok(file.entities.some(e => e.kind === 'owner') && file.entities.some(e => e.kind === 'monster'), 'arquivo: mundo (dono+monstro) preservado');
+  ok(file.config && file.config.AggroDist === 12, 'arquivo: resto da config preservado (AggroDist)');
+  // mundo intacto
+  const om = file.entities.find(e => e.id === 200);
+  ok(om && om.hp === 60 && om.atk === 6, 'arquivo: stats do MONSTRO preservados');
 }
 
 console.log('\nRESULTADO: ' + passes + ' ok, ' + fails + ' falhas');
