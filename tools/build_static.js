@@ -42,8 +42,8 @@ function build(outDir) {
   mkdirp(assetsDir); mkdirp(path.join(exDir, 'trees')); mkdirp(path.join(exDir, 'scenarios'));
 
   const A = {};
-  function emitAsset(srcRel, key, ext) { const c = fs.readFileSync(path.join(ROOT, srcRel)); const f = key + '.' + hash(c) + '.' + ext; fs.writeFileSync(path.join(assetsDir, f), c); A[key] = 'assets/' + f; return A[key]; }
-  function emitAssetStr(str, key, ext) { const b = Buffer.from(str, 'utf8'); const f = key + '.' + hash(b) + '.' + ext; fs.writeFileSync(path.join(assetsDir, f), b); A[key] = 'assets/' + f; return A[key]; }
+  function emitAsset(srcRel, key, ext) { const c = fs.readFileSync(path.join(ROOT, srcRel)); const f = key + '.' + hash(c) + '.' + ext; const dst = path.join(assetsDir, f); if (!fs.existsSync(dst)) fs.writeFileSync(dst, c); A[key] = 'assets/' + f; return A[key]; }
+  function emitAssetStr(str, key, ext) { const b = Buffer.from(str, 'utf8'); const f = key + '.' + hash(b) + '.' + ext; const dst = path.join(assetsDir, f); if (!fs.existsSync(dst)) fs.writeFileSync(dst, b); A[key] = 'assets/' + f; return A[key]; }
 
   // 1) Lua bundle (toda a pasta lua/)
   emitAssetStr('window.BRAI_LUA_FILES = ' + JSON.stringify(walk(path.join(ROOT, 'lua'), '', {})) + ';\n', 'lua-bundle', 'js');

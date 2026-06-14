@@ -63,7 +63,7 @@ const gcs = () => ({ getPropertyValue: () => '#000000' });
 // carrega o renderer.js como uma "página", devolvendo handles internos
 function loadPage(win, doc, ss) {
   const factory = new Function('window', 'document', 'sessionStorage', 'performance', 'getComputedStyle', 'console',
-    SRC + '\n;return { persistSetup, restoreSetup, captureScenario, SCENARIO,' +
+    SRC + '\n;return { persistSetup, restoreSetup, captureScenario, scenarioForFile, SCENARIO,' +
     ' get frames(){return frames}, set frames(v){frames=v},' +
     ' get showAllHp(){return showAllHp}, set showAllHp(v){showAllHp=v} };');
   return factory(win, doc, ss, perf, gcs, console);
@@ -152,5 +152,29 @@ try {
 }
 
 // ============================================================================
+// ============================================================================
+console.log('TESTE 6 — arquivo de cenário IGNORA o homúnculo (não persiste info do homún)');
+{
+  const ssX = makeSession();
+  const docX = makeDoc(), winX = makeWin(ssX);
+  const pX = loadPage(winX, docX, ssX);
+  docX.getElementById('homun').value = '52'; docX.getElementById('base').value = '3';
+  pX.frames = [{ grid: { w: 40, h: 40 }, entities: [
+    { id: 1, kind: 'owner', x: 10, y: 10, hp: 1000, maxhp: 1000 },
+    { id: 100, kind: 'homun', x: 20, y: 20, hp: 100, maxhp: 100, sp: 100, maxsp: 100, homunType: 52, motion: 0 },
+    { id: 200, kind: 'monster', x: 24, y: 23, hp: 60, maxhp: 60, atk: 6, aggro: 9, etype: 1042, aggressive: true, motion: 0 },
+  ] }];
+  const full = pX.captureScenario(pX.frames[0]);
+  const file = pX.scenarioForFile(full);
+  // a captura de SESSÃO mantém o homún (handoff editor->sim)
+  ok(!!full.entities.find(e => e.kind === 'homun'), 'sessão (captureScenario) AINDA tem o homún');
+  ok(full.homunType === 52, 'sessão mantém homunType');
+  // o ARQUIVO não tem nada do homún
+  ok(!file.entities.find(e => e.kind === 'homun'), 'arquivo: SEM entidade homún');
+  ok(file.homunType === undefined && file.baseType === undefined, 'arquivo: SEM homunType/baseType');
+  ok(!file.config || file.config.BaseHomunType === undefined, 'arquivo: SEM config.BaseHomunType');
+  ok(file.entities.some(e => e.kind === 'owner') && file.entities.some(e => e.kind === 'monster'), 'arquivo: mundo (dono+monstro) preservado');
+}
+
 console.log('\nRESULTADO: ' + passes + ' ok, ' + fails + ' falhas');
 process.exit(fails ? 1 : 0);
