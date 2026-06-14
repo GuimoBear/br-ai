@@ -142,7 +142,7 @@ A spec padrão (`lua/src/tree_homun.lua`, espelhada em `desktop/shared/tree_homu
 2. **sobrevivência** — se HP baixo e sob ataque, foge.
 3. **cura-urgente** — cura a si (`UseHealSelf`) ou o dono (`UseHealOwner`).
 4. **UseCastling** — Amistr troca de lugar com o dono cercado.
-5. **UseOwnerBuff** — mantém buff no dono (Painkiller da Sera).
+5. **UseOwnerBuff** — mantém buff no dono.
 6. **Engajar** — sequência: primeiro define o alvo (resgatar o dono › manter alvo atual › adquirir novo), depois age em combate (summon › AoE › skill single › ataque normal › perseguir).
 7. **ocioso** — volta para o dono se longe; senão recasta buffs ofensivos/defensivos; senão fica ocioso.
 

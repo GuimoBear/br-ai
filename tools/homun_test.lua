@@ -2,6 +2,7 @@
 -- Uso: texlua tools/homun_test.lua
 local boot = dofile("lua/sim_boot.lua")
 local BRAI = boot("lua")
+dofile("tools/fixtures/full_tree.lua")  -- fixa a árvore de referência (não depende do default empacotado)
 local json = BRAI.json
 local C = BRAI.const
 local SID = BRAI.skills.id

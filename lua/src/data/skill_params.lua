@@ -34,7 +34,7 @@ BRAI.skillParamRoleDesc = {
   defBuff   = "Buffs defensivos aplicados em si mesmo.",
   healSelf  = "Cura aplicada no próprio homúnculo quando o HP cai.",
   healOwner = "Cura aplicada no dono quando o HP dele cai.",
-  ownerBuff = "Buff aplicado no dono (ex.: Painkiller).",
+  ownerBuff = "Buff aplicado no dono.",
   castling  = "Reposiciona o dono/si para tirar o dono do aperto.",
 }
 

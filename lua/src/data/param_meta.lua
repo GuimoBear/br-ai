@@ -22,7 +22,7 @@ BRAI.paramMeta = {
   HealOwnerHP          = { label = "Curar o dono abaixo de (HP%)",help = "Cura o dono quando o HP% dele fica abaixo deste valor." },
   UseOffensiveBuff     = { label = "Manter buffs ofensivos",      help = "Recasta automaticamente os buffs ofensivos ao expirar." },
   UseDefensiveBuff     = { label = "Manter buffs defensivos",     help = "Recasta automaticamente os buffs defensivos ao expirar." },
-  UseOwnerBuff         = { label = "Buffar o dono",               help = "Mantém o buff no dono (ex.: Painkiller)." },
+  UseOwnerBuff         = { label = "Buffar o dono",               help = "Mantém o buff no dono." },
   UseCastling          = { label = "Usar Castling",               help = "Liga o Castling (trocar de posição com o dono)." },
   CastleDefendThreshold= { label = "Mín. de mobs p/ Castling",    help = "Quantos monstros no dono para disparar o Castling." },
 

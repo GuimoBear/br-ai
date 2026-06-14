@@ -11,9 +11,9 @@ var node = require(path.join(__dirname, 'build_tree.js'));
 var n = 0; function ok(c, m) { n++; assert.ok(c, m); }
 function eq(a, b, m) { n++; assert.deepStrictEqual(a, b, m); }
 
-var ctx = { homunType: 51, baseType: 2, config: { AggroHP: 55, UseAutoHeal: false, BossGroup: 18, HealOwnerHP: 40, KSMode: 'polite' } };
+var ctx = { homunType: 51, baseType: 2, config: { AggroHP: 55, UseAutoHeal: false, BossGroup: 18, HealOwnerHP: 40, KSMode: 'polite', UseBaseSkills: true } };
 var cw = web.generateConfig(ctx);
-['AggroHP = 55', 'UseAutoHeal = false', 'BossGroup = 18', 'HealOwnerHP = 40', 'KSMode = "polite"', 'BaseHomunType = 2']
+['AggroHP = 55', 'UseAutoHeal = false', 'BossGroup = 18', 'HealOwnerHP = 40', 'KSMode = "polite"', 'BaseHomunType = 2', 'UseBaseSkills = true']
   .forEach(function (t) { ok(cw.indexOf(t) >= 0, 'web config contém: ' + t); });
 
 // paridade: o CORPO do config (linhas "\tKey = val,") é idêntico entre web e node

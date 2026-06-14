@@ -4,6 +4,7 @@
 
 local load = dofile("lua/bootstrap.lua")
 local BRAI = load("lua")
+dofile("tools/fixtures/full_tree.lua")  -- fixa a árvore de referência (não depende do default empacotado)
 
 local C   = BRAI.const
 local S   = BRAI.status

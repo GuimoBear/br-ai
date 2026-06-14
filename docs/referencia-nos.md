@@ -116,7 +116,7 @@ Estas ações resolvem qual skill usar a partir do perfil do tipo de homúnculo 
 | `UseDefensiveBuff` | Recasta auto-buffs defensivos expirados (Amistr Bulwark, Granitic Armor, ...). |
 | `UseHealSelf` | Cura a si quando HP% < HealSelfHP (Chaotic Blessing). |
 | `UseHealOwner` | Cura o dono quando HP% < HealOwnerHP (Healing Hands/Silent Breeze/Chaotic). |
-| `UseOwnerBuff` | Mantém buff no dono (Painkiller da Sera). |
+| `UseOwnerBuff` | Mantém buff no dono. |
 | `UseSummon` | Invoca minions contra o alvo (Summon Legion). |
 | `UseCastling` | Castling para tirar mobs do dono quando ele está cercado (Amistr). |
 

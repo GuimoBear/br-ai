@@ -155,7 +155,7 @@ reg.action("UseHealOwner", function(bb, np)
 	return S.SUCCESS
 end, { desc = "Cura o dono quando HP% < HealOwnerHP (Healing Hands/Silent Breeze/Chaotic)." })
 
------------------------------------------------------------------- buff no dono (Painkiller)
+------------------------------------------------------------------ buff no dono
 reg.action("UseOwnerBuff", function(bb, np)
 	local p = prof(bb)
 	if not (effRole(np, bb, "ownerBuff", "UseOwnerBuff") and p.ownerBuff and bb.owner.exists) then return S.FAILURE end
@@ -169,7 +169,7 @@ reg.action("UseOwnerBuff", function(bb, np)
 	if bb.owner.dist > sys.range(p.ownerBuff, lvl) then return S.FAILURE end
 	bb:setIntent("skill", { skill = p.ownerBuff, level = lvl, target = bb.owner.id, mode = 1, reason = sys.name(p.ownerBuff) })
 	return S.SUCCESS
-end, { desc = "Mantém buff no dono (Painkiller da Sera; Goldene Tone do Bayeri é self-cast)." })
+end, { desc = "Mantém o buff no dono (skills self-cast como Goldene Tone valem p/ o dono)." })
 
 ------------------------------------------------------------------ invocação (Sera — Legião)
 -- Decisão pura de (re)invocar a Legião. Usa o ESTIMADOR (Fase 1: perception/skillsys),

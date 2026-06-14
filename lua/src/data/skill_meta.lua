@@ -29,7 +29,7 @@ local meta = {
 	[S.MH_SUMMON_LEGION]   = { iro = "Summon Legion",       cat = "special", role = "summon",     desc = "Invoca insetos que atacam o alvo." },
 	[S.MH_NEEDLE_OF_PARALYZE]={ iro = "Needle of Paralysis",cat = "single",  role = "mainAtk",    desc = "Dano de alvo único com chance de paralisia." },
 	[S.MH_POISON_MIST]     = { iro = "Poison Mist",         cat = "aoe",     role = "aoeAtk",     desc = "Névoa no chão: dano em área e cegueira." },
-	[S.MH_PAIN_KILLER]     = { iro = "Painkiller",          cat = "special", role = "ownerBuff",  desc = "Buff no dono: reduz dano recebido." },
+	[S.MH_PAIN_KILLER]     = { iro = "Painkiller",          cat = "buff",    role = "ownerBuff",  desc = "Buff defensivo: reduz dano recebido." },
 	[S.MH_LIGHT_OF_REGENE] = { iro = "Ray of Regeneration", cat = "buff",    role = "special",    desc = "Permite reviver o homúnculo uma vez ao morrer." },
 	[S.MH_OVERED_BOOST]    = { iro = "Overed Boost",        cat = "buff",    role = "offBuff",    desc = "Buff ofensivo: ASPD e FLEE altíssimos por um tempo." },
 	[S.MH_ERASER_CUTTER]   = { iro = "Erase Cutter",        cat = "single",  role = "mainAtk",    desc = "Dano mágico de alvo único (alcance 7)." },

@@ -25,7 +25,7 @@ local poison = has(cat, SID.MH_POISON_MIST)
 check(poison and poison.cat == "aoe", "Poison Mist classificada como 'aoe'")
 check(poison and poison.area ~= nil, "Poison Mist tem área")
 local painkiller = has(cat, SID.MH_PAIN_KILLER)
-check(painkiller and painkiller.cat == "special", "Painkiller classificada como 'special'")
+check(painkiller and painkiller.cat == "buff", "Painkiller classificada como 'buff' (defensivo)")
 
 -- Dieter sem base: só skills do Dieter, sem Caprice
 local catD = disp("skillCatalog", { homunType = C.DIETER, baseType = 0 })

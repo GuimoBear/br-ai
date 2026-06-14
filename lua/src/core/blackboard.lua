@@ -88,6 +88,7 @@ function BRAI.defaultConfig()
 		KSMode          = "polite", -- anti-KS: "polite" (respeita) ou "always" (free-for-all)
 		-- skills / buffs / heal
 		BaseHomunType       = 0,     -- forma base do Homunculus S (OldHomunType); 0 = N/A
+		UseBaseSkills       = false, -- opt-in: usar skills da forma base como fallback (S prioritario)
 		UseAttackSkill      = true,  -- usar skills ofensivas
 		AutoMobCount        = 2,     -- nº mínimo de alvos p/ usar AoE
 		AttackSkillReserveSP= 0,     -- reserva de SP p/ skills ofensivas

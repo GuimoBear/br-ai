@@ -793,7 +793,8 @@ function SIM_DISPATCH(method, argJson)
 		-- no editor (PLANO-SKILLS-NO-NO). bb sintético a partir de homunType/baseType do contexto.
 		local ht = (arg and arg.homunType) or 0
 		local bt = (arg and arg.baseType) or 0
-		local bb = { self = { homunType = ht }, config = { BaseHomunType = bt } }
+		local ub = (arg and arg.useBase and true) or false
+		local bb = { self = { homunType = ht }, config = { BaseHomunType = bt, UseBaseSkills = ub } }
 		local rc = (BRAI.roleConfig and BRAI.roleConfig(ht)) or {}
 		local out = {}
 		for action in pairs(BRAI.actionRole or {}) do

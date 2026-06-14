@@ -33,45 +33,62 @@ local function rcEntry(homunType, role, rc)
   return nil
 end
 
--- BRAI.roleSkillsFor(homunType, baseType, role[, rc]) -> { {id,name,maxLevel,level}, ... }
--- Lista EFETIVA de skills do papel (qualquer um dos 8). Os 4 papéis de ataque/buff vêm do
--- roleConfig (espelha a tela "Skills"); os 4 de perfil resolvem a skill própria ou herdada do
--- tipo base (Homunculus S). `rc` (roleConfig já pronto) é opcional para reuso.
-function BRAI.roleSkillsFor(homunType, baseType, role, rc)
+-- entrada de UMA skill (nome/maxLevel do catalogo) com marca fromBase
+local function entryFor(id, homunType, baseType, fromBase)
+  local name, maxLevel = ("#" .. id), 1
+  local cat = (BRAI.skillCatalog and BRAI.skillCatalog(homunType, baseType)) or {}
+  for _, s in ipairs(cat) do if s.id == id then name = s.iro; maxLevel = s.maxLevel or 1; break end end
+  return { id = id, name = name, maxLevel = maxLevel, level = 0, fromBase = fromBase or false }
+end
+
+-- BRAI.roleSkillsFor(homunType, baseType, role[, rc[, useBase]]) -> { {id,name,maxLevel,level,fromBase}, ... }
+-- Lista EFETIVA de skills do papel. O S e prioritario; a base entra so onde o S nao tem E
+-- useBase estiver ligado (opt-in). Skills herdadas vem com fromBase=true.
+function BRAI.roleSkillsFor(homunType, baseType, role, rc, useBase)
   homunType = tonumber(homunType) or 0
   baseType = tonumber(baseType) or 0
+  useBase = (useBase and true) or false
+  local baseProf = (useBase and baseType ~= 0 and baseType ~= homunType and BRAI.getProfile and BRAI.getProfile(baseType)) or nil
   if RC_ROLES[role] then
     local r = rcEntry(homunType, role, rc)
     local o = {}
     if r then for _, e in ipairs(r.effective or {}) do
-      o[#o + 1] = { id = e.id, name = e.name, maxLevel = e.maxLevel, level = e.level }
+      o[#o + 1] = { id = e.id, name = e.name, maxLevel = e.maxLevel, level = e.level, fromBase = false }
     end end
+    if #o == 0 and baseProf then                      -- S nao tem o papel: fallback p/ a base
+      local pv = baseProf[role]
+      if type(pv) == "table" then for _, id in ipairs(pv) do o[#o + 1] = entryFor(id, homunType, baseType, true) end
+      elseif pv then o[#o + 1] = entryFor(pv, homunType, baseType, true) end
+    end
     return o
   end
+  -- papeis fixos (cura/ownerBuff/castling): proprio S, senao herdado da base (se useBase)
   local prof = (BRAI.getProfile and BRAI.getProfile(homunType)) or {}
-  local base = (baseType ~= 0 and baseType ~= homunType and BRAI.getProfile and BRAI.getProfile(baseType)) or nil
-  local id = roleSkillOf(prof, role) or (base and roleSkillOf(base, role))
-  if not id then return {} end
-  local name, maxLevel = ("#" .. id), 1
-  local cat = (BRAI.skillCatalog and BRAI.skillCatalog(homunType, baseType)) or {}
-  for _, s in ipairs(cat) do if s.id == id then name = s.iro; maxLevel = s.maxLevel or 1; break end end
-  return { { id = id, name = name, maxLevel = maxLevel, level = 0 } }
+  local id = roleSkillOf(prof, role)
+  if id then return { entryFor(id, homunType, baseType, false) } end
+  if baseProf then
+    local bid = roleSkillOf(baseProf, role)
+    if bid then return { entryFor(bid, homunType, baseType, true) } end
+  end
+  return {}
 end
 
--- BRAI.actionSkills(bb, actionName[, rc]) -> nil se a ação NÃO é de skill, senão:
---   { role, state = "ok"|"none"|"missing", skills = { {id,name,maxLevel,level}, ... }, activeId }
---     ok      : há skill(s) efetiva(s) p/ usar
---     none    : o tipo TEM skills do papel, mas nenhuma selecionada (só papéis do roleConfig)
---     missing : o tipo NÃO tem skill do papel (ex.: Dieter ataque principal; homún sem cura)
+-- BRAI.actionSkills(bb, actionName[, rc]) -> nil se a acao NAO e de skill, senao:
+--   { role, state = "ok"|"none"|"missing"|"base", skills = {...}, fromBase = bool, activeId }
+--     ok      : ha skill(s) efetiva(s) do PROPRIO S
+--     base    : o S nao tem o papel, mas a forma base supre (UseBaseSkills ligado) -> "via base"
+--     none    : o tipo TEM skills do papel, mas nenhuma selecionada (so papeis do roleConfig)
+--     missing : nem o S nem a base (quando aplicavel) tem skill do papel
 --   activeId  : id da skill disparada NESTE tick (casa bb.intent), p/ destaque ao vivo (ou nil)
--- `rc` = roleConfig do homún já computado; passe p/ resolver 1x por snapshot (não 1x por nó).
 function BRAI.actionSkills(bb, actionName, rc)
   local role = BRAI.actionRole[actionName]
   if not role then return nil end
   local homunType = (bb and bb.self and bb.self.homunType) or 0
   local baseType = (bb and bb.config and bb.config.BaseHomunType) or 0
+  local useBase = (bb and bb.config and bb.config.UseBaseSkills and true) or false
   if RC_ROLES[role] then rc = rc or (BRAI.roleConfig and BRAI.roleConfig(homunType)) or {} end
-  local skills = BRAI.roleSkillsFor(homunType, baseType, role, rc)
+  local skills = BRAI.roleSkillsFor(homunType, baseType, role, rc, useBase)
+  local fromBase = (#skills > 0 and skills[1].fromBase) or false
   local state = "ok"
   if #skills == 0 then
     if RC_ROLES[role] then
@@ -81,12 +98,14 @@ function BRAI.actionSkills(bb, actionName, rc)
     else
       state = "missing"
     end
+  elseif fromBase then
+    state = "base"
   end
   local activeId = nil
   if bb and bb.intent and bb.intent.kind == "skill" and bb.intent.skill then
     for _, s in ipairs(skills) do if s.id == bb.intent.skill then activeId = s.id; break end end
   end
-  return { role = role, state = state, skills = skills, activeId = activeId }
+  return { role = role, state = state, skills = skills, fromBase = fromBase, activeId = activeId }
 end
 
 return true

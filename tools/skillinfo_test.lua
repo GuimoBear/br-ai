@@ -1,6 +1,7 @@
 -- skillinfo_test.lua — log de skill + bloco skills{cooldowns,buffs} no snapshot do sim.
 local boot = dofile("lua/sim_boot.lua")
 local BRAI = boot("lua")
+dofile("tools/fixtures/full_tree.lua")  -- fixa a árvore de referência (não depende do default empacotado)
 local json, C = BRAI.json, BRAI.const
 local pass, fail = 0, 0
 local function check(c, n) if c then pass = pass + 1; print("  ok  - " .. n)

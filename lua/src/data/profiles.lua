@@ -6,7 +6,7 @@
 --   offBuff[] : auto-buffs ofensivos (atacam melhor)
 --   defBuff[] : auto-buffs defensivos
 --   heal      : skill de cura ; healOwner/healSelf : a quem se aplica
---   ownerBuff : buff aplicado no dono (ex.: Painkiller)
+--   ownerBuff : buff aplicado no dono
 --   summon    : invocar minions (Summon Legion)
 --   combo[]   : cadeia de combo (Eleanor)
 --   styleChange : alternar modo (Eleanor)

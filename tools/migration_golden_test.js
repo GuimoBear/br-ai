@@ -31,6 +31,7 @@ function validateSpec(node, where) {
 
 // carrega o USER_AI/ real
 var dir = path.join(__dirname, '..', 'USER_AI');
+if (!fs.existsSync(dir)) { console.log('SKIP migration_golden: USER_AI/ ausente neste ambiente (fonte AzzyAI local).'); process.exit(0); }
 var files = {};
 fs.readdirSync(dir).forEach(function (f) { if (/\.lua$/i.test(f)) { try { files[f] = fs.readFileSync(path.join(dir, f), 'latin1'); } catch (e) {} } });
 

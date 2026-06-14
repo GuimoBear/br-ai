@@ -118,11 +118,11 @@ function tree.snapshot(node, bb)
 			local as = BRAI.actionSkills(bb, n.name, rc)
 			if as then
 				entry.skillState = as.state
-				if as.state == "ok" then
+				if as.state == "ok" or as.state == "base" then   -- "base" = herdada da forma base (via base)
 					for _, sk in ipairs(as.skills) do
 						BRAI.compat.push(out, {
-							label = skillRefLabel(sk), kind = "skillRef", depth = depth + 1, off = off,
-							skillId = sk.id, active = (as.activeId == sk.id) and true or false,
+							label = skillRefLabel(sk) .. (sk.fromBase and "  · via base" or ""), kind = "skillRef", depth = depth + 1, off = off,
+							skillId = sk.id, active = (as.activeId == sk.id) and true or false, fromBase = sk.fromBase and true or false,
 						})
 					end
 				else

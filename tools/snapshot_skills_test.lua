@@ -89,5 +89,20 @@ local cnt = 0; for _, e in ipairs(plain) do if e.kind == "skillRef" then cnt = c
 check(cnt == 0, "snapshot(tree) sem bb: 0 skillRef (comportamento atual)")
 check(#plain == 4, "snapshot(tree) sem bb: 4 nós (selector + 3 ações)")
 
+-- ===== (5) skill herdada da forma base: estado 'base' mostra a skill (NAO "nao tem") =====
+print("== via base (UseBaseSkills) ==")
+local function bbBase(homun, base) return { self = { homunType = homun }, config = { BaseHomunType = base, UseBaseSkills = true } } end
+-- Sera base Vanilmirth: cura do dono herdada (Chaotic) -> estado 'base'
+local sb = BRAI.tree.snapshot(tree, bbBase(C.SERA, C.VANILMIRTH))
+local hi5, he5 = actionAt(sb, "UseHealOwner")
+check(he5 and he5.skillState == "base", "Sera+base Vanil cura: nó-ação skillState 'base'")
+local hr5 = refsAfter(sb, hi5)
+check(#hr5 == 1 and hr5[1].skillId == S.HVAN_CHAOTIC, "via base: filho = Chaotic (skillId), nao o aviso 'nao tem'")
+check(hr5[1].label:find("via base") ~= nil and hr5[1].fromBase == true, "via base: rótulo marca 'via base' + fromBase")
+check(hr5[1].label:find("não tem") == nil, "via base: NAO mostra 'este tipo nao tem esta skill'")
+-- mesma Sera SEM a flag: volta a missing
+local sb0 = BRAI.tree.snapshot(tree, bbFor(C.SERA, C.VANILMIRTH))
+check(refsAfter(sb0, (actionAt(sb0, "UseHealOwner")))[1].skillState == "missing", "sem UseBaseSkills: cura volta a missing (opt-in)")
+
 print(string.format("\nRESULTADO: %d ok, %d falhas", pass, fail))
 if fail > 0 then os.exit(1) end

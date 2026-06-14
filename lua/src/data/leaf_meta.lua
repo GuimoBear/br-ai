@@ -64,7 +64,7 @@ BRAI.leafMeta = {
   UseDefensiveBuff = { title = "Buff defensivo",             group = "Buffs, cura & defesa" },
   UseHealSelf      = { title = "Curar a si",                 group = "Buffs, cura & defesa" },
   UseHealOwner     = { title = "Curar o dono",               group = "Buffs, cura & defesa" },
-  UseOwnerBuff     = { title = "Buff no dono (Painkiller)",   group = "Buffs, cura & defesa" },
+  UseOwnerBuff     = { title = "Buff no dono",   group = "Buffs, cura & defesa" },
   UseCastling      = { title = "Castling (trocar c/ o dono)", group = "Buffs, cura & defesa" },
   -- Skills (manual)
   UseSkill         = { title = "Usar skill específica", group = "Skills (manual)" },

@@ -200,7 +200,11 @@ function find(rows, pred) { return rows.filter(pred); }
 (function () {
   var rm = migrate.migrate({ 'H_Config.lua': 'UseIdleWalk = 1\n' }, {});
   var iw = 0, oc = null;
-  migrate._walk(rm.wrapper.spec, function (n) { if (n.label === 'ocioso') oc = n; if (n.name === 'IdleWalk') iw++; });
+  // localiza o ramo ocioso por CONTEÚDO (selector que contém Idle) — robusto ao rótulo da árvore default
+  migrate._walk(rm.wrapper.spec, function (n) {
+    if (!oc && n.type === 'selector' && Array.isArray(n.children) && n.children.some(function (c) { return c.name === 'Idle'; })) oc = n;
+    if (n.name === 'IdleWalk') iw++;
+  });
   eq(iw, 1, '8c: migrate injeta IdleWalk quando UseIdleWalk');
   var names = oc ? oc.children.map(function (c) { return c.name; }) : [];
   ok(names.indexOf('IdleWalk') >= 0 && names.indexOf('IdleWalk') < names.indexOf('Idle'), '8c: IdleWalk vem antes de Idle no ocioso');

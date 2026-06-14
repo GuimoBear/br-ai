@@ -2,6 +2,7 @@
 -- Uso: texlua tools/base_test.lua
 local boot = dofile("lua/sim_boot.lua")
 local BRAI = boot("lua")
+dofile("tools/fixtures/full_tree.lua")  -- fixa a árvore de referência (não depende do default empacotado)
 local json = BRAI.json
 local C = BRAI.const
 local SID = BRAI.skills.id
@@ -19,7 +20,7 @@ local function scenario(htype, base, ownerHp, mobs)
 	for i, m in ipairs(mobs or {}) do
 		ents[#ents + 1] = { id = 200 + i, kind = "monster", x = m.x, y = m.y, hp = 300, maxhp = 300, atk = 3, aggro = 12, etype = 1042 }
 	end
-	return { grid = { w = 40, h = 40 }, dt = 50, homunId = 100, ownerId = 1, entities = ents, config = { BaseHomunType = base } }
+	return { grid = { w = 40, h = 40 }, dt = 50, homunId = 100, ownerId = 1, entities = ents, config = { BaseHomunType = base, UseBaseSkills = (base ~= nil and base ~= 0) } }  -- opt-in liga o uso da base
 end
 local function runUntil(pred, max)
 	for i = 1, (max or 10) do local s = disp("step"); if pred(s.intent) then return s end end

@@ -9,7 +9,7 @@ local pass, fail = 0, 0
 local function check(c, n) if c then pass = pass + 1; print("  ok  - " .. n)
   else fail = fail + 1; print("  FAIL- " .. n) end end
 local function bbFor(homun, base, intentSkill)
-  return { self = { homunType = homun }, config = { BaseHomunType = base or 0 },
+  return { self = { homunType = homun }, config = { BaseHomunType = base or 0, UseBaseSkills = (base ~= nil and base ~= 0) },
     intent = intentSkill and { kind = "skill", skill = intentSkill } or nil }
 end
 
@@ -54,7 +54,7 @@ check(BRAI.actionSkills(bbFor(C.FILIR), "UseCastling").state == "missing", "Fili
 -- ===== (6) Homun S herda cura/castling do tipo base =====
 print("== herança do base (Homun S) ==")
 -- Homun S sem castling próprio nem no base -> missing; com base que tem (Amistr) -> ok:
-check(BRAI.actionSkills(bbFor(C.DIETER, C.AMISTR), "UseCastling").state == "ok", "Dieter+base Amistr: castling herdado (ok)")
+check(BRAI.actionSkills(bbFor(C.DIETER, C.AMISTR), "UseCastling").state == "base", "Dieter+base Amistr: castling herdado (estado via base)")
 check(BRAI.actionSkills(bbFor(C.DIETER), "UseCastling").state == "missing", "Dieter sem base: castling missing")
 
 -- ===== (7) activeId: skill disparada no tick acende =====
@@ -69,6 +69,18 @@ print("== roleSkillsFor ==")
 local rs = BRAI.roleSkillsFor(C.DIETER, 0, "offBuff")
 check(#rs == 1 and rs[1].id == S.MH_PYROCLASTIC, "roleSkillsFor Dieter offBuff = Pyroclastic")
 check(#BRAI.roleSkillsFor(C.DIETER, 0, "mainAtk") == 0, "roleSkillsFor Dieter mainAtk vazio")
+
+-- ===== (9) feature "usar skills da base": estado 'base' + fromBase + opt-in =====
+print("== usar skills da base (opt-in) ==")
+local sb = BRAI.actionSkills(bbFor(C.SERA, C.VANILMIRTH), "UseHealOwner")
+check(sb and sb.state == "base" and sb.fromBase == true, "Sera+base Vanil cura: estado 'base' (via base)")
+check(sb and #sb.skills == 1 and sb.skills[1].id == S.HVAN_CHAOTIC and sb.skills[1].fromBase, "Sera+base: cura = Chaotic marcada fromBase")
+local sboff = BRAI.actionSkills({ self = { homunType = C.SERA }, config = { BaseHomunType = C.VANILMIRTH, UseBaseSkills = false } }, "UseHealOwner")
+check(sboff and sboff.state == "missing", "Sera+base com flag OFF: cura missing (opt-in)")
+local edef = BRAI.actionSkills(bbFor(C.ELEANOR, C.FILIR), "UseDefensiveBuff")
+check(edef and edef.state == "base" and edef.skills[1].id == S.HFLI_SPEED, "Eleanor+base Filir defBuff: via base (Accelerated Flight)")
+local eoff = BRAI.actionSkills(bbFor(C.EIRA, C.LIF), "UseOffensiveBuff")
+check(eoff and eoff.state == "ok" and eoff.fromBase == false, "Eira+base: offBuff proprio (ok, nao via base)")
 
 print(string.format("RESULTADO: %d ok, %d falhas", pass, fail))
 if fail > 0 then os.exit(1) end

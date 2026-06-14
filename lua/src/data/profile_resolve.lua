@@ -1,14 +1,24 @@
 -- profile_resolve.lua — perfil EFETIVO do homunculo (S + tipo base mesclados).
 -- Equivale ao OldHomunType do AzzyAI: o cliente informa a forma S (Dieter), mas a
--- forma base (Vanilmirth/Amistr/...) precisa ser escolhida; o S mantem as skills da base.
+-- forma base (Vanilmirth/Amistr/...) precisa ser escolhida; o S pode reusar as skills da base.
+-- O uso da base e OPT-IN: so mescla quando bb.config.UseBaseSkills e verdadeiro (a base
+-- nunca e usada se a flag estiver desligada, mesmo com BaseHomunType setado).
+-- Regra: o S e PRIORITARIO; a base entra so onde o S nao tem (fallback). offBuff/defBuff
+-- NAO somam — fallback estrito (a base so entra se o S nao tiver nenhum buff do tipo).
 -- Normaliza tambem a cura em healOwnerSkill/healSelfSkill.
 BRAI = BRAI or {}
 
-local function concat(a, b)
+local function copyList(a)
 	local out = {}
 	if a then for _, v in ipairs(a) do out[#out + 1] = v end end
-	if b then for _, v in ipairs(b) do out[#out + 1] = v end end
 	return out
+end
+
+-- fallback ESTRITO p/ listas (off/def): usa a lista do S se tiver algo; senao a da base.
+local function listFallback(a, b)
+	if a and #a > 0 then return copyList(a) end
+	if b and #b > 0 then return copyList(b) end
+	return {}
 end
 
 local function healOf(p)
@@ -20,19 +30,18 @@ local function healOf(p)
 	return ho, hs
 end
 
--- Perfil efetivo conforme bb.self.homunType + bb.config.BaseHomunType.
-function BRAI.profileFor(bb)
-	local sType = bb.self.homunType
+-- Perfil EFETIVO (S + base) conforme a politica de uso da base.
+-- sType/baseType: tipos numericos. useBase: liga o uso das skills da base (opt-in).
+function BRAI.effectiveProfile(sType, baseType, useBase)
 	local sp = BRAI.getProfile(sType)
-	local base = bb.config.BaseHomunType
 	local bp = nil
-	if base and base ~= 0 and base ~= sType then bp = BRAI.getProfile(base) end
+	if useBase and baseType and baseType ~= 0 and baseType ~= sType then bp = BRAI.getProfile(baseType) end
 
 	local m = {}
 	m.mainAtk     = sp.mainAtk     or (bp and bp.mainAtk)
 	m.aoeAtk      = sp.aoeAtk      or (bp and bp.aoeAtk)
-	m.offBuff     = concat(sp.offBuff, bp and bp.offBuff)
-	m.defBuff     = concat(sp.defBuff, bp and bp.defBuff)
+	m.offBuff     = listFallback(sp.offBuff, bp and bp.offBuff)   -- fallback estrito (nao soma)
+	m.defBuff     = listFallback(sp.defBuff, bp and bp.defBuff)   -- fallback estrito (nao soma)
 	m.ownerBuff   = sp.ownerBuff   or (bp and bp.ownerBuff)
 	m.summon      = sp.summon      or (bp and bp.summon)
 	m.combo       = sp.combo       or (bp and bp.combo)
@@ -46,7 +55,16 @@ function BRAI.profileFor(bb)
 	m.healOwnerSkill = sho or bho
 	m.healSelfSkill  = shs or bhs
 
-	m.baseType = base
+	m.baseType = baseType
+	m.useBase  = (useBase and true) or false
+	return m
+end
+
+-- Perfil efetivo conforme bb.self.homunType + bb.config (BaseHomunType + UseBaseSkills).
+function BRAI.profileFor(bb)
+	local sType = bb.self.homunType
+	local useBase = (bb.config.UseBaseSkills and true) or false
+	local m = BRAI.effectiveProfile(sType, bb.config.BaseHomunType, useBase)
 	if BRAI.applySkillChoice then BRAI.applySkillChoice(sType, m) end
 	return m
 end

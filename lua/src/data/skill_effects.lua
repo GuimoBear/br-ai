@@ -77,7 +77,7 @@ fx[S.MH_POISON_MIST]      = { kind = "magic", dmg = {200,400,600,800,1000},
 	status = { name = "Envenenado/Cego", chance = {100,100,100,100,100}, dur = {4000,6000,8000,10000,12000} },
 	note = "Névoa no chão: dano mágico por segundo na área e cegueira.",
 	desc = {"200% MATK/s por 3s","400%/s 6s","600%/s 9s","800%/s 12s","1000%/s 15s"} }
-fx[S.MH_PAIN_KILLER]      = { kind = "buff", note = "Buff no dono: reduz o dano recebido.",
+fx[S.MH_PAIN_KILLER]      = { kind = "buff", note = "Buff defensivo: reduz o dano recebido.",
 	desc = {"330s","360s","390s","420s","450s","480s","510s","540s","570s","600s"} }
 
 -- ===== EIRA =====
