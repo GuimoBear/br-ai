@@ -35,7 +35,8 @@
     "smoke:config-prop": "node config_propagation_smoke.js",
     "viz-skills-smoke": "node sim_skills_smoke.js",
     "smoke:nodeskills": "node node_skills_smoke.js",
-    "smoke:baseskills": "node base_skills_smoke.js"
+    "smoke:baseskills": "node base_skills_smoke.js",
+    "smoke:configjump": "node config_jump_smoke.js"
   },
   "license": "MIT",
   "devDependencies": {
