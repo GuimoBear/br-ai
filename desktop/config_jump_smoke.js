@@ -110,6 +110,20 @@ async function main() {
     ok((await pg.locator('#iSkillCfg').count()) === 0, 'missing: "Configurar skills" some do inspetor');
     ok((await pg.locator('#iParamCfg').count()) === 1, 'missing: "Parâmetros" continua no inspetor');
 
+    // ===== tela de Skills mostra só skills do PRÓPRIO homún (skill da base se configura na base) =====
+    await pg.selectOption('#ctxHomun', '51'); await pg.waitForTimeout(150); // Dieter (S)
+    await pg.selectOption('#ctxBase', '2'); await pg.waitForTimeout(300);   // base Amistr (tem Castling)
+    await pg.locator('.gnode:has(span.type.t-act)').first().click();
+    await pg.waitForSelector('#iName', { timeout: 8000 });
+    await pg.selectOption('#iName', 'UseAoESkill'); await pg.waitForTimeout(300); // skill própria do Dieter (ok)
+    await pg.locator('.gnode.sel .cfgbtn.cfg-skills').click(); await pg.waitForSelector('#scModal', { timeout: 8000 });
+    ok((await pg.locator('#scHomunSel').inputValue()) === '51', 'Skills abre no Dieter');
+    ok((await pg.locator('#scModal .sc-roleblock[data-role="castling"]').count()) === 0, 'Dieter (base Amistr): Castling NÃO aparece (é skill do Amistr)');
+    // selecionando o Amistr no dropdown, o Castling aparece (lá se configura)
+    await pg.selectOption('#scModal #scHomunSel', '2'); await pg.waitForTimeout(400);
+    ok((await pg.locator('#scModal .sc-roleblock[data-role="castling"]').count()) === 1, 'Amistr: Castling aparece (configura-se aqui)');
+    await pg.click('#scModal #scClose'); await pg.waitForTimeout(200);
+
     ok(errs.length === 0, 'sem erros de página (' + errs.slice(0, 2).join(' | ') + ')');
   } finally {
     if (browser) await browser.close();
