@@ -8,7 +8,7 @@ local reg = BRAI.registry
 -- ordem dos grupos na paleta (o editor segue esta ordem)
 BRAI.leafGroupOrder = {
   "Vida (HP/SP)", "Ameaça", "Alvo", "Ataque", "Movimento",
-  "Skills ofensivas", "Buffs, cura & defesa", "Skills (manual)", "Dono", "Eleanor & Sera",
+  "Skills ofensivas", "Buffs, cura & defesa", "Skills (manual)", "Skills", "Dono", "Eleanor & Sera",
 }
 
 -- [name] = { title = <PT curto>, group = <grupo> }
@@ -31,6 +31,7 @@ BRAI.leafMeta = {
   InAttackRange    = { title = "Alvo no alcance de ataque", group = "Alvo" },
   CanEngage        = { title = "Pode engajar",              group = "Alvo" },
   TargetIsBoss     = { title = "Alvo é Boss/MVP",           group = "Alvo" },
+  HasSkill         = { title = "Possui a skill",            group = "Skills" },
   -- Dono
   HasOwnerCommand  = { title = "Há comando do dono",     group = "Dono" },
   TooFarFromOwner  = { title = "Longe demais do dono",   group = "Dono" },

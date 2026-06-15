@@ -121,4 +121,11 @@ reg.condition("LegionExpiring", function(bb, p)
 end, { desc = "A janela da Legião expira em menos de 'ms' (re-summon antecipado).", params = { ms = "number" } })
 
 
+-- "Possui a skill X": o homúnculo APRENDEU a skill (em jogo o cliente responde via GetV; no
+-- simulador, o stub decide pelo lvl do homún). Use o `inverter` p/ "NÃO possui". Param: skill.
+reg.condition("HasSkill", function(bb, p)
+	return BRAI.skillsys.learned(bb, p and p.skill)
+end, { desc = "O homúnculo já aprendeu a skill escolhida (negue com 'inverter' p/ 'NÃO possui').", params = { skill = "skill" } })
+
+
 return true

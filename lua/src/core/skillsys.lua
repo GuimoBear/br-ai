@@ -45,6 +45,23 @@ function sys.knownLevel(bb, skill)
 end
 function sys.knows(bb, skill) return sys.knownLevel(bb, skill) ~= nil end
 
+-- sys.learned(bb, skill): a skill foi APRENDIDA de fato? Em jogo, GetV(V_SKILLATTACKRANGE) só vale
+-- p/ skills aprendidas; no simulador o stub decide pelo lvl do homún vs reqLevel. Cacheado por tick.
+-- FAIL-OPEN: consulta indefinida ⇒ true (não bloqueia). O motor NÃO conhece nível — só chama GetV.
+function sys.learned(bb, skill)
+	if not skill then return false end
+	local p = bb.persist
+	if not p.learnedCache or p.learnedCache.tick ~= bb:now() then p.learnedCache = { tick = bb:now() } end
+	local c = p.learnedCache
+	local v = c[skill]
+	if v == nil then
+		local ok, r = pcall(function() return BRAI.ro.getv(C.V_SKILLATTACKRANGE, bb.self.id, skill) end)
+		if not ok or type(r) ~= "number" then v = true else v = r >= 0 end
+		c[skill] = v
+	end
+	return v
+end
+
 -- cooldown
 function sys.ready(bb, skill)
 	return bb:now() >= (bb.persist.skillReadyAt[skill] or 0)

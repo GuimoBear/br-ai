@@ -57,6 +57,16 @@ function BRAI.setSkillChoice(tbl)
 								local id2, lv2 = tonumber(k2), tonumber(v2)
 								if id2 and id2 > 0 and lv2 and lv2 >= 1 and lv2 <= 10 then r.skillLevels[id2] = math.floor(lv2) end
 							end
+						elseif rk == "skillGate" and type(sid) == "table" then
+							-- gate POR SKILL: r.skillGate[id] = { skill = X, negate = bool } ("só usar se [não] tiver X")
+							r.skillGate = {}
+							for k2, g in pairs(sid) do
+								local id2 = tonumber(k2)
+								local gs = (type(g) == "table") and tonumber(g.skill)
+								if id2 and id2 > 0 and gs and gs > 0 then
+									r.skillGate[id2] = { skill = gs, negate = (g.negate and true) or false }
+								end
+							end
 						elseif ROLE_KEYS[rk] and type(sid) == "table" then
 							local lst = {}
 							for _, v in ipairs(sid) do local i = tonumber(v); if i and i > 0 then lst[#lst + 1] = i end end
@@ -94,6 +104,10 @@ function BRAI.applySkillChoice(homunType, m)
 	if ch.skillLevels then  -- nível POR SKILL (precede o por papel em capSkill)
 		m.skillLevels = m.skillLevels or {}
 		for k, v in pairs(ch.skillLevels) do m.skillLevels[k] = v end
+	end
+	if ch.skillGate then  -- gate POR SKILL: "só usar se [não] tiver a skill X" (consumido em usable)
+		m.skillGate = m.skillGate or {}
+		for k, v in pairs(ch.skillGate) do m.skillGate[k] = v end
 	end
 	return m
 end
@@ -156,11 +170,11 @@ function BRAI.roleConfig(homunType, baseType)
 	-- monta a entrada de UMA skill (com os campos do card on-hover) a partir do catalogo
 	local function catEntry(id)
 		local s = catById[id]
-		if not s then return { id = id, name = nameById[id] or ("#" .. id), iro = nameById[id] or ("#" .. id), desc = descById[id] or "", maxLevel = maxById[id] or 1, level = 0 } end
+		if not s then return { id = id, name = nameById[id] or ("#" .. id), iro = nameById[id] or ("#" .. id), desc = descById[id] or "", maxLevel = maxById[id] or 1, level = 0, gate = (ch.skillGate and ch.skillGate[id]) or nil } end
 		return { id = id, name = s.iro, iro = s.iro, desc = s.desc or "", maxLevel = s.maxLevel or 1, level = 0,
 			cat = s.cat, target = s.target, sp = s.sp, range = s.range, area = s.area,
 			fixedCast = s.fixedCast, varCast = s.varCast, delay = s.delay, reuse = s.reuse,
-			duration = s.duration, effect = s.effect }
+			duration = s.duration, effect = s.effect, gate = (ch.skillGate and ch.skillGate[id]) or nil }
 	end
 	local out = {}
 	for _, r in ipairs(ROLES) do
@@ -187,7 +201,8 @@ function BRAI.roleConfig(homunType, baseType)
 		local effective = {}
 		for _, id in ipairs(effIds) do
 			effective[#effective + 1] = { id = id, name = nameById[id] or ("#" .. id),
-				desc = descById[id] or "", maxLevel = maxById[id] or 1, level = skLevels[id] or 0 }
+				desc = descById[id] or "", maxLevel = maxById[id] or 1, level = skLevels[id] or 0,
+				gate = (ch.skillGate and ch.skillGate[id]) or nil }
 		end
 		local effId = effIds[1] or (cands[1] and cands[1].id) or 0
 		out[#out + 1] = {
@@ -220,18 +235,20 @@ function BRAI.allSkillChoices(raw)
 	local out = {}
 	for _, t in ipairs(TYPES) do
 		local rc = BRAI.roleConfig(t)
-		local entry, skillLevels = {}, {}
+		local entry, skillLevels, skillGate = {}, {}, {}
 		for _, role in ipairs(rc) do
 			local ids = {}
 			for _, e in ipairs(role.effective) do
 				ids[#ids + 1] = e.id
 				if e.level and e.level > 0 then skillLevels[e.id] = e.level end
+				if e.gate and e.gate.skill then skillGate[e.id] = { skill = e.gate.skill, negate = e.gate.negate or false } end
 			end
 			-- exporta a lista quando ha skills OU quando o usuario sobrescreveu (incl. lista vazia)
 			if (not role.fixed) and (#ids > 0 or role.overridden) then entry[role.key] = ids end
 			if (not role.fixed) and role.level and role.level > 0 then entry[role.key .. "Level"] = role.level end
 		end
 		if next(skillLevels) then entry.skillLevels = skillLevels end
+		if next(skillGate) then entry.skillGate = skillGate end
 		local combo = BRAI.comboChoiceFor(t)
 		if combo and next(combo) then entry.combo = combo end
 		out[tostring(t)] = entry

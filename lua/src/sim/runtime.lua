@@ -16,9 +16,17 @@ local SIM = { world = nil, bb = nil, tree = nil, scenario = nil }
 ----------------------------------------------------------------------
 
 local backend = {
-	GetV = function(v, id)
+	GetV = function(v, id, skill)
 		local e = SIM.world.entities[id]
 		if not e then return -1 end
+		-- SÓ DO SIM: "possui a skill" pelo NÍVEL do homún (mocka o que o jogo já faz via GetV).
+		-- Aprendida se lvl >= reqLevel (Renewal); reqLevel ausente ⇒ sem requisito (sempre possui).
+		if v == C.V_SKILLATTACKRANGE then
+			if not skill then return -1 end
+			local req = BRAI.skills.reqLevel and BRAI.skills.reqLevel[skill]
+			if req ~= nil and (e.lvl or 999) < req then return -1 end   -- não aprendida (nível insuficiente)
+			return 1                                                    -- aprendida (range válido)
+		end
 		if v == C.V_POSITION then return e.x, e.y end
 		if v == C.V_HP then return e.hp end
 		if v == C.V_SP then return e.sp or 0 end
@@ -73,6 +81,7 @@ local function buildWorld(scn)
 			motion = C.MOTION_STAND,
 			etype = e0.etype or 0,
 			homunType = e0.homunType,   -- classe do mob (p/ detectar invocações)
+			lvl = e0.lvl or 999,        -- SÓ DO SIM: nível do homún p/ mockar "possui a skill" (default alto = todas)
 			atk = e0.atk or (kind == "monster" and 8 or 10),
 			matk = e0.matk or (kind == "monster" and 0 or 10),
 			aggro = e0.aggro or 10,

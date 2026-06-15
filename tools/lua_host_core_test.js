@@ -17,10 +17,10 @@ const boot = fs.readFileSync(path.join(LUA, 'bootstrap.lua'), 'utf8');
 const list = parseModuleList(boot);
 ok(list[0] === 'src/compat.lua', 'primeiro módulo é src/compat.lua');
 ok(list.indexOf('src/tree_homun.lua') >= 0, 'inclui src/tree_homun.lua');
-ok(list[list.length - 2] === 'src/sim/json.lua' && list[list.length - 1] === 'src/sim/runtime.lua', 'termina com os módulos do simulador');
+ok(list[list.length - 3] === 'src/sim/json.lua' && list[list.length - 2] === 'src/sim/skill_req_level.lua' && list[list.length - 1] === 'src/sim/runtime.lua', 'termina com os módulos do simulador');
 ok(new Set(list).size === list.length, 'sem duplicatas na ordem');
 const fcount = (boot.match(/f\(\s*"[^"]+"\s*\)/g) || []).length;
-ok(list.length === fcount + 2, 'tamanho = nº de f(...) + 2 (json/runtime)');
+ok(list.length === fcount + 3, 'tamanho = nº de f(...) + 3 (json/skill_req_level/runtime)');
 
 (async function () {
   // --- create(): roda a BT real via Fengari pelo core ---

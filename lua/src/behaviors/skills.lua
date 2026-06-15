@@ -8,8 +8,17 @@ local util = BRAI.util
 
 local function prof(bb) return BRAI.profileFor(bb) end
 local function asList(v) if v == nil then return {} elseif type(v) == "table" then return v else return { v } end end
+-- gate "possui a skill X" (opt-in por skill, da tela de papéis): elegível só se [não] tiver X.
+local function gateOk(bb, skill)
+	local sg = prof(bb).skillGate
+	local g = sg and sg[skill]
+	if not g then return true end
+	local have = sys.learned(bb, g.skill)
+	if g.negate then return not have else return have end
+end
 local function usable(bb, skill, reserve)
 	if not skill or not sys.knows(bb, skill) then return nil end
+	if not gateOk(bb, skill) then return nil end       -- condição por skill falhou -> pula (cai pra próxima)
 	local lvl = sys.knownLevel(bb, skill)
 	if not sys.ready(bb, skill) then return nil end
 	if not sys.enoughSP(bb, skill, lvl, reserve) then return nil end

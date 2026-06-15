@@ -16,7 +16,7 @@ function moduleList(luaBase) {
   let m;
   while ((m = re.exec(boot)) !== null) files.push(m[1]);
   // módulos do simulador (não carregados no cliente do RO)
-  files.push('src/sim/json.lua', 'src/sim/runtime.lua');
+  files.push('src/sim/json.lua', 'src/sim/skill_req_level.lua', 'src/sim/runtime.lua');
   return files;
 }
 

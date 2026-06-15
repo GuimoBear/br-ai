@@ -4,6 +4,7 @@ local function boot(base)
 	local load = dofile(base .. "/bootstrap.lua")
 	local BRAI = load(base)
 	dofile(base .. "/src/sim/json.lua")
+	dofile(base .. "/src/sim/skill_req_level.lua")
 	dofile(base .. "/src/sim/runtime.lua")
 	return BRAI
 end

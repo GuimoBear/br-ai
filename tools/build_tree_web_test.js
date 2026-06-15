@@ -41,6 +41,12 @@ ok(/aoeAtk = \{/.test(wm), 'web: aoeAtk como lista (tabela Lua)');
 ok(/skillLevels = \{/.test(wm), 'web: skillLevels serializado');
 eq(scBody(wm), scBody(nm), 'web e node: MESMO corpo de skill_choice (lista + skillLevels)');
 
+// gate "possui a skill X" (skillGate) serializado + paridade web↔node
+var scGate = { choices: { '51': { aoeAtk: [8044, 8041], skillGate: { '8044': { skill: 8044, negate: false }, '8041': { skill: 8044, negate: true } } } } };
+var wg = web.generateSkillChoice(scGate), ng = node.generateSkillChoice(scGate);
+ok(/skillGate = \{/.test(wg) && /negate = true/.test(wg) && /negate = false/.test(wg), 'web: skillGate serializado (com negate)');
+eq(scBody(wg), scBody(ng), 'web e node: MESMO corpo de skill_choice (skillGate)');
+
 // N5: lista VAZIA (= nenhuma skill) serializada + paridade web↔node
 var scEmpty = { choices: { '51': { aoeAtk: [] } } };
 var we = web.generateSkillChoice(scEmpty), ne = node.generateSkillChoice(scEmpty);
