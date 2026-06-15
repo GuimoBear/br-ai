@@ -35,7 +35,7 @@ async function main() {
     await pg.click('#iSkillCfg'); await pg.waitForSelector('#scModal', { timeout: 8000 });
     ok(await pg.locator('#scModal').isVisible(), 'Configurar skills abre o modal de Skills');
     ok((await pg.locator('#scHomunSel').inputValue()) === '51', 'Skills abre no homún do editor (Dieter=51)');
-    ok((await pg.locator('#scModal .sc-row[data-role="aoeAtk"].sc-focus, #scModal .sc-skills[data-role="aoeAtk"].sc-focus').count()) >= 1, 'papel aoeAtk destacado (sc-focus)');
+    ok((await pg.locator('#scModal .sc-roleblock[data-role="aoeAtk"].sc-focus').count()) >= 1, 'papel aoeAtk destacado (sc-focus)');
     await pg.click('#scModal #scClose'); await pg.waitForTimeout(200);
 
     // troca o homún do editor e reabre: deve abrir no NOVO homún (mata o "grudento")
