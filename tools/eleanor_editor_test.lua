@@ -31,6 +31,9 @@ check(ci.power[1].iro == "Sonic Claw" and ci.grapple[1].iro == "Tinder Breaker",
 check(ci.power[3].finisher == true and ci.grapple[3].bossForbidden == true, "E1e: finisher + EQC proibido em boss")
 check(ci.power[2].maxLevel == 10 and ci.power[1].maxLevel == 5, "E1f: nível máx por elo (Silvervein 10, Sonic 5)")
 check(ci.defaults.autoComboSpheres == 5 and ci.defaults.window == 2000, "E1g: defaults (barragem 5, janela 2000)")
+check(ci.lvl200 and ci.lvl200.theOne.id == SID.MH_THE_ONE_FIGHTER_RISES and ci.lvl200.blazing.id == SID.MH_BLAZING_AND_FURIOUS, "E1h: comboInfo.lvl200 ids 8051/8050")
+check(ci.lvl200.theOne.iro and ci.lvl200.blazing.sphereOp == "consumeAll" and ci.lvl200.theOne.sphereOp == "fillMax", "E1i: iRO + sphereOp")
+check(ci.lvl200.theOne.maxLevel == 10 and ci.defaults.lvl200Mode == "fillThenCombo", "E1j: maxLevel 10 + default de painel fillThenCombo")
 
 print("== E2: nível por elo (o que o painel escreve em params.levels) ==")
 disp("setTree", { type = "sequence", children = {
@@ -57,6 +60,8 @@ check(meta ~= nil and meta.kind == "action", "E3a: UseEleanorOffense exportado n
 local pr = meta and meta.params or {}
 check(pr.style and pr.comboSpheres and pr.window and pr.grappleThreatLimit and pr.allowStyleSwitch,
 	"E3b: schema expõe style/comboSpheres/window/grappleThreatLimit/allowStyleSwitch")
+check(pr.lvl200Mode and pr.theOneMinMobs and pr.blazingMinSpheres and pr.interruptCombo,
+	"E3c: schema expõe lvl200Mode + knobs 200+")
 
 print(string.format("RESULTADO: %d ok, %d falhas", pass, fail))
 os.exit(fail == 0 and 0 or 1)

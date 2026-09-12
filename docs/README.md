@@ -17,6 +17,7 @@ O projeto tem três pilares:
 | Testar e depurar uma árvore no mundo simulado | [guia-simulador.md](guia-simulador.md) |
 | Saber o que cada nó faz e seus parâmetros | [referencia-nos.md](referencia-nos.md) |
 | Reagir ao monstro alvo (cadastro de monstros/grupos + nó `monsterCheck`) | [guia-editor.md](guia-editor.md#monstros-e-grupos) · [referencia-nos.md](referencia-nos.md) |
+| Entender a Eleanor (estilos, esferas, ofensiva 200+) | [eleanor.md](eleanor.md) · [ajuda](../desktop/static/help/eleanor.html) |
 | Mexer no código: testes, behaviors, dados, integração | [desenvolvimento.md](desenvolvimento.md) |
 
 ## Documentos de visão (na raiz do projeto)

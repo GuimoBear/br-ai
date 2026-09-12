@@ -20,6 +20,7 @@
       <a href="simulador.html">Simulador</a>
       <a href="referencia-nos.html" class="cur">Referência de nós</a>
       <a href="monstros-e-skills.html">Monstros &amp; skills</a>
+      <a href="eleanor.html">Eleanor</a>
       <a href="conceitos.html">Conceitos</a>
     </nav>
   </div>
@@ -202,7 +203,7 @@
     <thead><tr><th>Nome (e código)</th><th>Parâmetros</th><th>Descrição</th></tr></thead>
     <tbody>
       <tr><td><strong>Skill principal (alvo único)</strong><br><code>UseMainSkill</code></td><td>(perfil)</td><td>Usa a 1ª skill single-target <b>utilizável</b> da <b>lista de prioridade</b> do papel (0..N; <b>lista vazia ⇒ não age</b>). Gates: <code>UseHomunSSkillAttack</code> (em alcance) / <code>UseHomunSSkillChase</code> (aproximando).</td></tr>
-      <tr><td><strong>Skill em área (AoE)</strong><br><code>UseAoESkill</code></td><td>(perfil)</td><td>Usa a 1ª AoE <b>utilizável</b> da <b>lista de prioridade</b>. <b>Sem <code>mainAtk</code></b> (ex.: Dieter), a AoE é a ofensiva principal e dispara com <b>≥1 alvo</b>; <b>com <code>mainAtk</code></b> exige <code>AutoMobCount</code> alvos. <code>AutoMobMode=0</code> desliga; <code>AoEFixedLevel</code> fixa o nível; <code>AoEMaximizeTargets</code> mira no aglomerado.</td></tr>
+      <tr><td><strong>Skill em área (AoE)</strong><br><code>UseAoESkill</code></td><td>(perfil)</td><td>Usa a 1ª AoE <b>utilizável</b> da <b>lista de prioridade</b>. <b>Sem <code>mainAtk</code></b> (ex.: Dieter), a AoE é a ofensiva principal e dispara com <b>≥1 alvo</b>; <b>com <code>mainAtk</code></b> (ex.: Eleanor) exige <code>AutoMobCount</code> alvos. Na Eleanor o padrão é The One → Blazing; Blazing com 0 esferas é pulado. <code>AutoMobMode=0</code> desliga; <code>AoEFixedLevel</code> fixa o nível; <code>AoEMaximizeTargets</code> mira no aglomerado. <a href="eleanor.html">Eleanor</a>.</td></tr>
     </tbody>
   </table>
   <h3>Buffs, cura &amp; defesa</h3>
@@ -241,7 +242,7 @@
     <tbody>
       <tr><td><strong>Trocar estilo (Eleanor)</strong><br><code>SetStyle</code></td><td><code>style</code> (<code>power</code>|<code>grapple</code>)</td><td>Garante o estilo (Eleanor): conjura Style Change se necessário.</td></tr>
       <tr><td><strong>Combo (sequência)</strong><br><code>UseCombo</code></td><td><code>combo</code>, <code>window</code></td><td>Executa um combo no alvo (sequência de golpes).</td></tr>
-      <tr><td><strong>Ofensiva da Eleanor</strong><br><code>UseEleanorOffense</code></td><td><code>style</code>, <code>comboSpheres</code>, <code>window</code>, …</td><td><strong>Eleanor:</strong> combo + estilo + esferas + segurança do Agarrão num só nó. Precedência: <b>param do nó &gt; padrão da tela de Skills (<code>homun_skills.json</code>) &gt; config</b>.</td></tr>
+      <tr><td><strong>Ofensiva da Eleanor</strong><br><code>UseEleanorOffense</code></td><td><code>style</code>, <code>comboSpheres</code>, <code>window</code>, <code>lvl200Mode</code> (<code>off</code>|<code>fillThenCombo</code>|<code>aoeDump</code>), …</td><td><strong>Eleanor:</strong> combo + estilo + esferas + segurança do Agarrão + ofensiva 200+ num só nó. 8050/8051 <b>não</b> são elos de combo. Precedência: <b>param do nó &gt; padrão da tela de Skills (<code>homun_skills.json</code>) &gt; off</b>. Detalhe: <a href="eleanor.html">página da Eleanor</a>.</td></tr>
       <tr><td><strong>Invocar Legião</strong><br><code>UseSummon</code></td><td>—</td><td>Invoca a Legião com a config padrão (atalho do <code>UseSeraLegion</code>).</td></tr>
       <tr><td><strong>Invocar/manter Legião (Sera)</strong><br><code>UseSeraLegion</code></td><td><code>level</code>, <code>resummon</code>, <code>minCount</code>, <code>minMobCount</code>, <code>vsBossOnly</code></td><td><strong>Sera:</strong> invoca/mantém a Legião com parâmetros. <code>resummon</code>: <code>onExpire</code>|<code>keepFull</code>|<code>minCount</code>; nível 1–5; <code>vsBossOnly</code>; <code>minMobCount</code>.</td></tr>
     </tbody>

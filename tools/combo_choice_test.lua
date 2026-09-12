@@ -23,6 +23,23 @@ check(cc.minGap == 100, "minGap=100")
 check(cc.allowStyleSwitch == false, "allowStyleSwitch=false")
 check(cc.levels and cc.levels.power[1] == 5 and cc.levels.grapple[3] == 2, "levels por elo")
 
+print("== chaves 200+ ==")
+BRAI.setSkillChoice({ choices = { ["52"] = { combo = {
+  lvl200Mode = "aoeDump", theOneMinMobs = 3, theOneWhenSpheresBelow = 2,
+  blazingMinMobs = 4, blazingMinSpheres = 6, interruptCombo = true,
+  levels = { theOne = 7, blazing = 8 } } } } })
+local l200 = BRAI.comboChoiceFor(52)
+check(l200.lvl200Mode == "aoeDump", "lvl200Mode=aoeDump")
+check(l200.theOneMinMobs == 3 and l200.theOneWhenSpheresBelow == 2, "theOne min mobs / esferas")
+check(l200.blazingMinMobs == 4 and l200.blazingMinSpheres == 6, "blazing min mobs / esferas")
+check(l200.interruptCombo == true, "interruptCombo=true")
+check(l200.levels and l200.levels.theOne == 7 and l200.levels.blazing == 8, "levels.theOne/blazing")
+BRAI.setSkillChoice({ choices = { ["52"] = { combo = { lvl200Mode = "banana", theOneMinMobs = -1, blazingMinSpheres = 99 } } } })
+local bad200 = BRAI.comboChoiceFor(52)
+check(not bad200 or bad200.lvl200Mode == nil, "lvl200Mode inválido ignorado")
+check(not bad200 or bad200.theOneMinMobs == nil, "theOneMinMobs negativo ignorado")
+check(not bad200 or bad200.blazingMinSpheres == nil, "blazingMinSpheres >10 ignorado")
+
 print("== valores inválidos são ignorados ==")
 BRAI.setSkillChoice({ choices = { ["52"] = { combo = { style = "xyz", window = -5, comboSpheres = 99 } } } })
 local bad = BRAI.comboChoiceFor(52)

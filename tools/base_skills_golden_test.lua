@@ -36,11 +36,11 @@ ub=off Dieter/Lif: main=- aoe=[8041,8044] off=[8042] def=[8040] owner=- healO=- 
 ub=off Dieter/Amistr: main=- aoe=[8041,8044] off=[8042] def=[8040] owner=- healO=- healS=- cast=- sum=- combo=- style=- dbuff=8043
 ub=off Dieter/Filir: main=- aoe=[8041,8044] off=[8042] def=[8040] owner=- healO=- healS=- cast=- sum=- combo=- style=- dbuff=8043
 ub=off Dieter/Vanil: main=- aoe=[8041,8044] off=[8042] def=[8040] owner=- healO=- healS=- cast=- sum=- combo=- style=- dbuff=8043
-ub=off Eleanor/none: main=8028 aoe=- off=[] def=[] owner=- healO=- healS=- cast=- sum=- combo=[8028,8029,8030] style=8027 dbuff=-
-ub=off Eleanor/Lif: main=8028 aoe=- off=[] def=[] owner=- healO=- healS=- cast=- sum=- combo=[8028,8029,8030] style=8027 dbuff=-
-ub=off Eleanor/Amistr: main=8028 aoe=- off=[] def=[] owner=- healO=- healS=- cast=- sum=- combo=[8028,8029,8030] style=8027 dbuff=-
-ub=off Eleanor/Filir: main=8028 aoe=- off=[] def=[] owner=- healO=- healS=- cast=- sum=- combo=[8028,8029,8030] style=8027 dbuff=-
-ub=off Eleanor/Vanil: main=8028 aoe=- off=[] def=[] owner=- healO=- healS=- cast=- sum=- combo=[8028,8029,8030] style=8027 dbuff=-
+ub=off Eleanor/none: main=8028 aoe=[8051,8050] off=[] def=[] owner=- healO=- healS=- cast=- sum=- combo=[8028,8029,8030] style=8027 dbuff=-
+ub=off Eleanor/Lif: main=8028 aoe=[8051,8050] off=[] def=[] owner=- healO=- healS=- cast=- sum=- combo=[8028,8029,8030] style=8027 dbuff=-
+ub=off Eleanor/Amistr: main=8028 aoe=[8051,8050] off=[] def=[] owner=- healO=- healS=- cast=- sum=- combo=[8028,8029,8030] style=8027 dbuff=-
+ub=off Eleanor/Filir: main=8028 aoe=[8051,8050] off=[] def=[] owner=- healO=- healS=- cast=- sum=- combo=[8028,8029,8030] style=8027 dbuff=-
+ub=off Eleanor/Vanil: main=8028 aoe=[8051,8050] off=[] def=[] owner=- healO=- healS=- cast=- sum=- combo=[8028,8029,8030] style=8027 dbuff=-
 ub=on Eira/none: main=8024 aoe=8025 off=[8023] def=[] owner=- healO=8026 healS=- cast=- sum=- combo=- style=- dbuff=-
 ub=on Eira/Lif: main=8024 aoe=8025 off=[8023] def=[8002] owner=- healO=8026 healS=- cast=- sum=- combo=- style=- dbuff=-
 ub=on Eira/Amistr: main=8024 aoe=8025 off=[8023] def=[8006] owner=- healO=8026 healS=- cast=8005 sum=- combo=- style=- dbuff=-
@@ -61,11 +61,11 @@ ub=on Dieter/Lif: main=- aoe=[8041,8044] off=[8042] def=[8040] owner=- healO=800
 ub=on Dieter/Amistr: main=- aoe=[8041,8044] off=[8042] def=[8040] owner=- healO=- healS=- cast=8005 sum=- combo=- style=- dbuff=8043
 ub=on Dieter/Filir: main=8009 aoe=[8041,8044] off=[8042] def=[8040] owner=- healO=- healS=- cast=- sum=- combo=- style=- dbuff=8043
 ub=on Dieter/Vanil: main=8013 aoe=[8041,8044] off=[8042] def=[8040] owner=- healO=8014 healS=8014 cast=- sum=- combo=- style=- dbuff=8043
-ub=on Eleanor/none: main=8028 aoe=- off=[] def=[] owner=- healO=- healS=- cast=- sum=- combo=[8028,8029,8030] style=8027 dbuff=-
-ub=on Eleanor/Lif: main=8028 aoe=- off=[8004] def=[8002] owner=- healO=8001 healS=- cast=- sum=- combo=[8028,8029,8030] style=8027 dbuff=-
-ub=on Eleanor/Amistr: main=8028 aoe=- off=[8008] def=[8006] owner=- healO=- healS=- cast=8005 sum=- combo=[8028,8029,8030] style=8027 dbuff=-
-ub=on Eleanor/Filir: main=8028 aoe=- off=[8010] def=[8011] owner=- healO=- healS=- cast=- sum=- combo=[8028,8029,8030] style=8027 dbuff=-
-ub=on Eleanor/Vanil: main=8028 aoe=- off=[] def=[] owner=- healO=8014 healS=8014 cast=- sum=- combo=[8028,8029,8030] style=8027 dbuff=-
+ub=on Eleanor/none: main=8028 aoe=[8051,8050] off=[] def=[] owner=- healO=- healS=- cast=- sum=- combo=[8028,8029,8030] style=8027 dbuff=-
+ub=on Eleanor/Lif: main=8028 aoe=[8051,8050] off=[8004] def=[8002] owner=- healO=8001 healS=- cast=- sum=- combo=[8028,8029,8030] style=8027 dbuff=-
+ub=on Eleanor/Amistr: main=8028 aoe=[8051,8050] off=[8008] def=[8006] owner=- healO=- healS=- cast=8005 sum=- combo=[8028,8029,8030] style=8027 dbuff=-
+ub=on Eleanor/Filir: main=8028 aoe=[8051,8050] off=[8010] def=[8011] owner=- healO=- healS=- cast=- sum=- combo=[8028,8029,8030] style=8027 dbuff=-
+ub=on Eleanor/Vanil: main=8028 aoe=[8051,8050] off=[] def=[] owner=- healO=8014 healS=8014 cast=- sum=- combo=[8028,8029,8030] style=8027 dbuff=-
 ]==]
 local exp = {}
 for line in EXPECTED:gmatch("[^\n]+") do exp[#exp + 1] = line end

@@ -20,6 +20,9 @@ disp("setTree", tree.spec)
 -- carrega um cenário pelo arquivo (passa o JSON cru direto p/ o load) e semeia esferas
 local function loadScenario(path)
 	json.decode(SIM_DISPATCH("load", readFile(path)))
+	-- árvore real agora tem UseAoESkill 200+; pin lvl < 215 para a regressão clássica (Sonic, não The One)
+	local h = BRAI.sim.world.entities[100]
+	if h then h.lvl = 200 end
 	sys.addSpheres(BRAI.sim.bb, 10)   -- pula a fase de acúmulo (determinismo do teste)
 end
 -- roda N passos coletando: skills de combo, Style Change, e estado do alvo 201

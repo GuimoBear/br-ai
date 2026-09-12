@@ -17,8 +17,12 @@
           "type": "selector", "label": "Atacar (Eleanor)",
           "children": [
             {
+              "type": "action", "name": "UseAoESkill", "params": {},
+              "label": "AoE 200+ (The One / Blazing)"
+            },
+            {
               "type": "action", "name": "UseEleanorOffense",
-              "params": { "style": "auto", "comboSpheres": 3, "window": 2000, "grappleThreatLimit": 1 }
+              "params": { "style": "auto", "comboSpheres": 3, "window": 2000, "grappleThreatLimit": 1, "lvl200Mode": "fillThenCombo" }
             },
             {
               "type": "check", "name": "InAttackRange", "params": {},

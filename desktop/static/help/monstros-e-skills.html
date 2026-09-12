@@ -20,6 +20,7 @@
       <a href="simulador.html">Simulador</a>
       <a href="referencia-nos.html">Referência de nós</a>
       <a href="monstros-e-skills.html" class="cur">Monstros &amp; skills</a>
+      <a href="eleanor.html">Eleanor</a>
       <a href="conceitos.html">Conceitos</a>
     </nav>
   </div>
@@ -36,7 +37,7 @@
       <li><a href="#monstros">Monstros e grupos</a></li>
       <li><a href="#monstercheck">O nó monsterCheck</a></li>
       <li><a href="#skills">Skills por homúnculo</a></li>
-      <li><a href="#eleanor">Combos da Eleanor</a></li>
+      <li><a href="#eleanor">Combos da Eleanor</a> <span class="muted">→ <a href="eleanor.html">página completa</a></span></li>
       <li><a href="#sera">Invocações da Sera</a></li>
     </ul>
   </div>
@@ -93,21 +94,11 @@
   <p>O modal tem <strong>⬇ exportar</strong> e <strong>⬆ importar</strong> a config num arquivo <code>homun_skill_params.json</code>. No <strong>pacote gerado</strong>, esses parâmetros viram <code>skill_params.lua</code> (carregado pelo cliente) e o JSON-fonte vai em <code>source/homun_skill_params.json</code>. Para <strong>Homunculus S</strong>, cura/Painkiller/Castling vêm da <strong>forma base</strong> — o modal mostra isso quando a base está definida no contexto.</p>
 
   <h2 id="eleanor">Combos da Eleanor</h2>
-  <p>A Eleanor é o caso mais complexo: dano de alvo único em <strong>dois estilos mutuamente exclusivos</strong>, alternados por Style Change:</p>
-  <ul>
-    <li><strong>Combate</strong> (Power): Sonic Claw → Silvervein Rush → Midnight Frenzy.</li>
-    <li><strong>Agarrão</strong> (Grapple): Tinder Breaker → C.B.C. → E.Q.C.</li>
-  </ul>
-  <p>Tudo é encapsulado no nó <strong><code>UseEleanorOffense</code></strong> e configurado pelo painel <strong>Combos</strong> — aberto pela barra de ferramentas ou pelo <strong>link na tela de Skills</strong> (Eleanor). O painel tem <strong>dois modos</strong>: o <strong>padrão</strong> da Eleanor (salvo nas skills padrão, em <code>homun_skills.json</code>) e o de um <strong>nó</strong> específico — e os <strong>params do nó na árvore sobrepõem o padrão</strong>. Os pontos que valem entender:</p>
-  <ul>
-    <li><strong>Esferas Espirituais (estimadas).</strong> A API do cliente não expõe a contagem de esferas, então a IA <strong>estima</strong> (sobe com ataques e dano recebido, desce pelo custo de cada golpe). A “barragem” só <strong>inicia</strong> um combo quando há esferas estimadas para fechar o finalizador — evitando disparar um finalizador sem recurso.</li>
-    <li><strong>Segurança do Agarrão.</strong> O Tinder Breaker zera o Flee da Eleanor; em multidão isso é fatal. O nó só libera o Agarrão quando há poucos monstros no raio (limite configurável); caso contrário, recua para o Combate.</li>
-    <li><strong>E.Q.C. em Boss/MVP.</strong> O finalizador do Agarrão é <strong>podado</strong> contra Boss/MVP (proibido pelo servidor), via flag de percepção ou um grupo de boss do catálogo.</li>
-    <li><strong>Robustez.</strong> O combo reinicia ao trocar/perder o alvo (não herda golpes no alvo errado) e ao estourar a janela; a troca de estilo tem trava anti-loop.</li>
-  </ul>
+  <p>A Eleanor é o caso mais complexo: dois estilos mutuamente exclusivos (Combate e Agarrão), esferas que a API não mostra, e — no nv 215/230 — duas skills de área que <strong>não são elos de combo</strong>. A página <a href="eleanor.html">Eleanor</a> cobre os dois jeitos de usar (Skill em área vs. painel Combos), os presets 200+ e o campo <code>lvl</code> do simulador.</p>
+  <p>Resumo: o nó <strong><code>UseEleanorOffense</code></strong> encapsula estilo + barragem + cadeia clássica. O painel <strong>Combos</strong> (barra de ferramentas ou link na tela de Skills) edita o padrão em <code>homun_skills.json</code> ou os params do nó — o nó sobrepõe o padrão. Tinder zera o Flee (Agarrão só isolada); E.Q.C. é podado em Boss/MVP. The One (8051) enche esferas; Blazing (8050) consome todas.</p>
   <div class="box tip">
     <div class="h">✓ Visualização dedicada no simulador</div>
-    <p>Ao simular uma Eleanor, o painel lateral mostra as <strong>esferas</strong> estimadas e a <strong>sequência do combo</strong> em andamento, desenhados sobre o sprite — ótimo para entender por que um finalizador disparou (ou não).</p>
+    <p>Ao simular uma Eleanor, o painel lateral mostra as <strong>esferas</strong> estimadas e a <strong>sequência do combo</strong> em andamento, desenhados sobre o sprite. Skills 200+ não avançam o elo no visualizador.</p>
   </div>
 
   <h2 id="sera">Invocações da Sera</h2>

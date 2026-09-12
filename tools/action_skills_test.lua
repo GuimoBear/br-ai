@@ -28,6 +28,14 @@ check(aoe and aoe.state == "ok", "Dieter AoE: estado ok")
 check(aoe and #aoe.skills == 2, "Dieter AoE: 2 skills (multi-linha)")
 check(aoe and aoe.skills[1].id == S.MH_LAVA_SLIDE and aoe.skills[2].id == S.MH_BLAST_FORGE, "Dieter AoE: Lava Slide + Blast Forge na ordem do perfil")
 
+-- ===== (2b) Eleanor AoE: The One → Blazing =====
+print("== Eleanor AoE (200+) ==")
+local eaoe = BRAI.actionSkills(bbFor(C.ELEANOR), "UseAoESkill")
+check(eaoe and eaoe.state == "ok", "Eleanor UseAoESkill: estado ok")
+check(eaoe and #eaoe.skills == 2, "Eleanor UseAoESkill: 2 skills")
+check(eaoe and eaoe.skills[1].id == S.MH_THE_ONE_FIGHTER_RISES and eaoe.skills[2].id == S.MH_BLAZING_AND_FURIOUS,
+  "Eleanor UseAoESkill: The One → Blazing")
+
 -- ===== (3) Dieter ataque principal: papel NÃO existe -> missing =====
 print("== Dieter mainAtk (missing) ==")
 local mn = BRAI.actionSkills(bbFor(C.DIETER), "UseMainSkill")

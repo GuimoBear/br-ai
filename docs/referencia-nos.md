@@ -111,7 +111,7 @@ Estas ações resolvem qual skill usar a partir do perfil do tipo de homúnculo 
 | Ação | Descrição |
 |---|---|
 | `UseMainSkill` | Usa a skill ofensiva single-target no alvo. |
-| `UseAoESkill` | Usa a skill de AoE da lista de prioridade. Sem `mainAtk` (ex.: Dieter), a AoE é a ofensiva principal e dispara com ≥1 alvo; com `mainAtk`, exige `AutoMobCount` alvos. `AutoMobMode=0` desliga; `AoEFixedLevel` fixa o nível; `AoEMaximizeTargets` mira no aglomerado. |
+| `UseAoESkill` | Usa a skill de AoE da lista de prioridade. Sem `mainAtk` (ex.: Dieter), a AoE é a ofensiva principal e dispara com ≥1 alvo; com `mainAtk` (ex.: Eleanor: The One → Blazing), exige `AutoMobCount` alvos. Blazing com 0 esferas é pulado. `AutoMobMode=0` desliga; `AoEFixedLevel` fixa o nível; `AoEMaximizeTargets` mira no aglomerado. |
 | `UseOffensiveBuff` | Recasta auto-buffs ofensivos expirados (Bloodlust, Flitting, Pyroclastic, ...). |
 | `UseDefensiveBuff` | Recasta auto-buffs defensivos expirados (Amistr Bulwark, Granitic Armor, ...). |
 | `UseHealSelf` | Cura a si quando HP% < HealSelfHP (Chaotic Blessing). |
@@ -130,7 +130,7 @@ Use estas para montar comportamentos customizados apontando uma skill específic
 | `UseSkillBuff` | `skill` (number), `level` (number) | Usa um buff em si mesmo (não recasta enquanto o efeito durar). |
 | `SetStyle` | `style` (string: `power`\|`grapple`) | Garante o estilo (Eleanor): conjura Style Change se necessário. |
 | `UseCombo` | `combo` (string: `power`\|`grapple`), `window` (number) | Executa um combo no alvo (sequência de golpes). |
-| `UseEleanorOffense` | `style` (`power`\|`grapple`\|`auto`), `comboSpheres`, `window`, `grappleThreatLimit`, `minGap` (number), `allowStyleSwitch` (bool), `levels` | **Eleanor:** combo + estilo + esferas + segurança do Agarrão num só nó. Edite pelo painel **"Combos da Eleanor"**. |
+| `UseEleanorOffense` | `style` (`power`\|`grapple`\|`auto`), `comboSpheres`, `window`, `grappleThreatLimit`, `minGap` (number), `allowStyleSwitch` (bool), `levels`, `lvl200Mode` (`off`\|`fillThenCombo`\|`aoeDump`), `theOneMinMobs`, `theOneWhenSpheresBelow`, `blazingMinMobs`, `blazingMinSpheres`, `interruptCombo` | **Eleanor:** combo + estilo + esferas + segurança do Agarrão + ofensiva 200+ num só nó. 8050/8051 **não** são elos de combo. Edite pelo painel **"Combos da Eleanor"**. Página: [eleanor.md](eleanor.md). |
 
 ## Como os nós de skill se adaptam por homúnculo
 
@@ -138,13 +138,13 @@ A mesma árvore atende os 9 tipos de homúnculo. As ações automáticas (`UseMa
 
 ## Homunculus S: combos da Eleanor
 
-A Eleanor é o caso mais complexo: dano de alvo único em **dois estilos mutuamente exclusivos** — Combate (Power: Sonic Claw → Silvervein Rush → Midnight Frenzy) e Agarrão (Grapple: Tinder Breaker → C.B.C. → E.Q.C.) — alternados por Style Change. Tudo é encapsulado no nó **`UseEleanorOffense`** (decisão pura: uma intenção por tick), configurável pelo painel **"Combos da Eleanor"** do editor.
+A Eleanor é o caso mais complexo: dano de alvo único em **dois estilos mutuamente exclusivos** — Combate (Power: Sonic Claw → Silvervein Rush → Midnight Frenzy) e Agarrão (Grapple: Tinder Breaker → C.B.C. → E.Q.C.) — alternados por Style Change, mais duas skills 200+ **autônomas** (The One / Blazing) que **não** entram em `BRAI.combos`. Tudo isso está em [eleanor.md](eleanor.md) (dev) e na [página de ajuda](../desktop/static/help/eleanor.html).
 
-**Esferas Espirituais (estimadas).** Os golpes consomem esferas, mas a API do cliente não expõe a contagem. A IA **estima** (`bb.self.spheres`): +0,5 por ataque físico e +0,5 por dano recebido (teto 10), decrementa pelo custo de cada golpe (Silvervein/Tinder/C.B.C. = 1; Midnight/E.Q.C. = 2; Sonic = 0) e tem um *fail-safe* (−1) quando um cast é rejeitado. A **barragem** (`comboSpheres` / `AutoComboSpheres`) só inicia um combo quando há esferas estimadas para fechar o finalizador — evitando o "stutter" de disparar um finalizador sem recurso.
+**Esferas Espirituais (estimadas).** Os golpes consomem esferas, mas a API do cliente não expõe a contagem. A IA **estima** (`bb.self.spheres`): +0,5 por ataque físico e +0,5 por dano recebido (teto 10), decrementa pelo custo de cada golpe (Silvervein/Tinder/C.B.C. = 1; Midnight/E.Q.C. = 2; Sonic = 0) e tem um *fail-safe* (−1) quando um cast é rejeitado. The One (`fillMax`) enche ao máximo; Blazing (`consumeAll`) zera. A **barragem** (`comboSpheres` / `AutoComboSpheres`) só inicia um combo quando há esferas estimadas para fechar o finalizador — evitando o "stutter" de disparar um finalizador sem recurso.
 
 **Segurança do Agarrão.** O Tinder Breaker zera o Flee da Eleanor; em multidão isso é fatal. O `UseEleanorOffense` (e a condição `SafeToGrapple`) só liberam o Agarrão quando há no máximo `grappleThreatLimit` monstros no raio; caso contrário, recuam para o Combate. O finalizador **E.Q.C. é podado em Boss/MVP** (proibido pelo servidor), via flag de percepção ou um grupo de boss do catálogo (`BossGroup`).
 
-**Robustez.** O combo reinicia ao **trocar/perder o alvo** (não herda golpes no alvo errado) e ao estourar a `window`. A troca de estilo tem trava anti-loop (`StyleSwitchLockMs`). `minGap` espaça os golpes para não floodar pacotes em servidores lotados. Implementação: `lua/src/behaviors/skills.lua` (`UseEleanorOffense`), `lua/src/core/skillsys.lua` (esferas) e `lua/src/data/combos.lua` (custos). Testes: `tools/eleanor_{sphere,combo,grapple,editor}_test.lua`.
+**Robustez.** O combo reinicia ao **trocar/perder o alvo** (não herda golpes no alvo errado) e ao estourar a `window`. A troca de estilo tem trava anti-loop (`StyleSwitchLockMs`). `minGap` espaça os golpes para não floodar pacotes em servidores lotados. Implementação: `lua/src/behaviors/skills.lua` (`UseEleanorOffense`, `tryLvl200`, `aoeUsable`), `lua/src/core/skillsys.lua` (esferas) e `lua/src/data/combos.lua` (custos). Testes: `tools/eleanor_{sphere,combo,grapple,editor,lvl200,newskills,scenarios}_test.lua`.
 
 ## Exemplo de spec
 

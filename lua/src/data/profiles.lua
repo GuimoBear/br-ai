@@ -52,6 +52,7 @@ profiles[C.EIRA] = {
 }
 profiles[C.ELEANOR] = {
 	mainAtk = S.MH_SONIC_CLAW,
+	aoeAtk = { S.MH_THE_ONE_FIGHTER_RISES, S.MH_BLAZING_AND_FURIOUS },  -- 200+: fill (The One) → dump (Blazing)
 	combo = { S.MH_SONIC_CLAW, S.MH_SILVERVEIN_RUSH, S.MH_MIDNIGHT_FRENZY },
 	styleChange = S.MH_STYLE_CHANGE,
 }

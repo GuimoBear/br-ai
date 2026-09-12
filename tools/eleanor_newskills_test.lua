@@ -36,8 +36,12 @@ print("== N3: meta (catálogo do editor) ==")
 local cat = BRAI.skillCatalog(C.ELEANOR, 0)
 local byId = {}; for _, s in ipairs(cat) do byId[s.id] = s end
 check(byId[8049] == nil, "N3a: Brushup fora do catálogo")
-check(byId[SID.MH_BLAZING_AND_FURIOUS] and byId[SID.MH_BLAZING_AND_FURIOUS].cat == "aoe" and byId[SID.MH_BLAZING_AND_FURIOUS].target == "enemy", "N3b: Blazing = AoE, target enemy")
-check(byId[SID.MH_THE_ONE_FIGHTER_RISES] and byId[SID.MH_THE_ONE_FIGHTER_RISES].cat == "aoe" and byId[SID.MH_THE_ONE_FIGHTER_RISES].target == "self", "N3c: The One = AoE, target self")
+check(byId[SID.MH_BLAZING_AND_FURIOUS] and byId[SID.MH_BLAZING_AND_FURIOUS].cat == "aoe" and byId[SID.MH_BLAZING_AND_FURIOUS].target == "enemy" and byId[SID.MH_BLAZING_AND_FURIOUS].role == "aoeAtk", "N3b: Blazing = AoE/aoeAtk, target enemy")
+check(byId[SID.MH_THE_ONE_FIGHTER_RISES] and byId[SID.MH_THE_ONE_FIGHTER_RISES].cat == "aoe" and byId[SID.MH_THE_ONE_FIGHTER_RISES].target == "self" and byId[SID.MH_THE_ONE_FIGHTER_RISES].role == "aoeAtk", "N3c: The One = AoE/aoeAtk, target self")
+check(sys.delay(SID.MH_THE_ONE_FIGHTER_RISES, 1) == 500 and sys.delay(SID.MH_THE_ONE_FIGHTER_RISES, 10) == 500, "N3d: The One delay 500ms")
+check(sys.reuse(SID.MH_THE_ONE_FIGHTER_RISES, 1) == 3800 and sys.reuse(SID.MH_THE_ONE_FIGHTER_RISES, 10) == 2000, "N3e: The One reuse 3800→2000ms")
+local oneInfo = sys.info(SID.MH_THE_ONE_FIGHTER_RISES)
+check(oneInfo[5][1] == 0 and oneInfo[5][10] == 0, "N3f: The One varCast 0")
 
 print("== N4: efeitos (dano % por nível, ignora DEF) ==")
 local fx = BRAI.skillFx

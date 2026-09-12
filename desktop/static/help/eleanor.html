@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Eleanor — BR-AI</title>
+<link rel="stylesheet" href="help.css" />
+<link rel="icon" href="img/logo.svg" />
+</head>
+<body>
+<header class="top">
+  <div class="row">
+    <a class="brand" href="index.html"><img src="img/logo.svg" alt="" /> BR-AI <span class="muted" style="font-weight:500">· Documentação</span></a>
+    <nav>
+      <a href="index.html">Início</a>
+      <a href="primeiros-passos.html">Primeiros passos</a>
+      <a href="passo-a-passo.html">Passo a passo</a>
+      <a href="migrar.html">Migrar AzzyAI</a>
+      <a href="editor.html">Editor</a>
+      <a href="simulador.html">Simulador</a>
+      <a href="referencia-nos.html">Referência de nós</a>
+      <a href="monstros-e-skills.html">Monstros &amp; skills</a>
+      <a href="eleanor.html" class="cur">Eleanor</a>
+      <a href="conceitos.html">Conceitos</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="crumbs"><a href="index.html">Início</a> › Eleanor</div>
+  <h1>Eleanor: combos, esferas e ofensiva 200+</h1>
+  <p class="lead">A Eleanor não é um homúnculo de “uma skill de área e um ataque”. Ela mistura dois estilos mutuamente exclusivos, esferas que a API do jogo não mostra, e duas skills de nível 200+ que <strong>não são elos de combo</strong>.</p>
+
+  <div class="toc">
+    <div class="h">Nesta página</div>
+    <ul>
+      <li><a href="#diferente">Por que ela é diferente</a></li>
+      <li><a href="#cadeias">Cadeias 100–133</a></li>
+      <li><a href="#200">Skills 200+: fill vs dump</a></li>
+      <li><a href="#dois">Dois jeitos de usar</a></li>
+      <li><a href="#modos">Presets do painel Combos</a></li>
+      <li><a href="#sim">Simulador: lvl 200 / 215 / 230</a></li>
+      <li><a href="#escape">UseSkill como escape</a></li>
+    </ul>
+  </div>
+
+  <h2 id="diferente">Por que ela é diferente</h2>
+  <p>Os outros Homunculus S escolhem uma skill de área e, se tiverem, um ataque de alvo único. A Eleanor empilha três sistemas:</p>
+  <ul>
+    <li><strong>Estilos.</strong> Combate (Power) e Agarrão (Grapple) são mutuamente exclusivos. <code>Style Change</code> troca entre eles; a IA tem trava anti-loop para não oscilar.</li>
+    <li><strong>Esferas estimadas.</strong> A API do cliente não expõe a contagem. A IA estima: sobe com ataques e dano recebido (teto 10) e desce pelo custo de cada golpe. A <strong>barragem</strong> só inicia um combo quando há esferas de sobra para fechar o finalizador.</li>
+    <li><strong>Guarda-chuva.</strong> O nó <code>Ofensiva da Eleanor</code> (<code>UseEleanorOffense</code>) cuida de estilo + barragem + cadeia + (opcional) ofensiva 200+ num só tick. Não monte Sonic → Silvervein → Midnight na mão.</li>
+  </ul>
+  <figure class="inline">
+    <a href="img/tut-eleanor-no.png" target="_blank" rel="noopener"><img src="img/tut-eleanor-no.png" alt="Inspetor do nó Ofensiva da Eleanor com o botão de abrir o painel de combos" /></a>
+    <figcaption>O inspetor resume estilo, barragem, janela e o modo 200+. O painel de Combos é um só — não há segundo modal.</figcaption>
+  </figure>
+
+  <h2 id="cadeias">Cadeias clássicas (nv 100–133)</h2>
+  <ul>
+    <li><strong>Combate (Power):</strong> Sonic Claw → Silvervein Rush → Midnight Frenzy.</li>
+    <li><strong>Agarrão (Grapple):</strong> Tinder Breaker → C.B.C. → E.Q.C.</li>
+  </ul>
+  <p>No estilo <strong>Auto</strong>, a Eleanor entra no Agarrão só quando está isolada (poucos monstros no raio, dentro do limite de ameaça). Em multidão fica no Combate: o Tinder Breaker zera o Flee, e isso é fatal com vários inimigos. O <strong>E.Q.C. é podado em Boss/MVP</strong> (o servidor recusa).</p>
+  <figure>
+    <a href="img/tut-eleanor-combos.png" target="_blank" rel="noopener"><img src="img/tut-eleanor-combos.png" alt="Painel de Combos da Eleanor com estilo, esferas, ameaça e as cadeias Power e Grapple" /></a>
+    <figcaption>Em cima: estilo, barragem, janela e limite de ameaça. No meio: as duas cadeias clássicas. <strong>Abaixo</strong> delas (role o painel) fica a seção Level 200+.</figcaption>
+  </figure>
+  <div class="box note">
+    <div class="h">Agarrão em chefe</div>
+    <p>Tinder e C.B.C. saem no boss; o E.Q.C. não. A IA cai para o Combate ou espera a janela resetar, em vez de stutter no finalizador proibido.</p>
+  </div>
+
+  <h2 id="200">Skills 200+: não são elos de combo</h2>
+  <p>Blazing and Furious e The One Fighter Rises <strong>não entram</strong> nas cadeias Power/Grapple. Não exigem Style Change, não avançam o “passo 2” do combo no simulador, e não respeitam a janela de 2&nbsp;s dos elos clássicos. São skills ativas autônomas que mexem na economia de esferas.</p>
+  <table>
+    <thead><tr><th>ID</th><th>Skill</th><th>Nv</th><th>O que faz</th></tr></thead>
+    <tbody>
+      <tr><td><code>8051</code></td><td><strong>The One Fighter Rises</strong></td><td>230</td><td>AoE centrada na Eleanor. <strong>Enche as esferas ao máximo.</strong> CD 3,8&nbsp;s → 2,0&nbsp;s por nível. Delay 500&nbsp;ms, cast 0.</td></tr>
+      <tr><td><code>8050</code></td><td><strong>Blazing and Furious</strong></td><td>215</td><td>Dash no inimigo, AoE em volta do alvo. Exige ≥1 esfera; hits = nº de esferas; <strong>consome todas</strong>. CD 1&nbsp;s, delay 500&nbsp;ms.</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Brushup Claw</strong> (8049) é passiva — fica fora do editor, como as outras passivas. Os nomes “Fighter” <strong>não</strong> exigem o estilo Power.</p>
+  <figure>
+    <a href="img/tut-eleanor-lvl200.png" target="_blank" rel="noopener"><img src="img/tut-eleanor-lvl200.png" alt="Seção Level 200+ do painel Combos: modo, limiares de esferas/mobs e as duas skills" /></a>
+    <figcaption>Seção <b>Level 200+</b> no painel Combos (abaixo das cadeias). Num nó sem a chave, o modo cai em Off — o padrão do painel, ao editar o padrão da Eleanor, é Encher e combar.</figcaption>
+  </figure>
+  <div class="box key">
+    <div class="h">★ Fill vs dump</div>
+    <p><strong>The One = fill</strong> (enche, não gasta). <strong>Blazing = dump</strong> (zera as esferas). A ordem padrão no papel AoE é The One depois Blazing: primeiro a área + refill, depois o dump se ainda houver cluster e esfera.</p>
+  </div>
+
+  <h2 id="dois">Dois jeitos de usar (como o Blast Forge do Dieter)</h2>
+  <p>Quem monta a árvore “igual ao Dieter” (skill em área em cima da ofensiva) e quem só quer encher esferas no alvo único usam superfícies diferentes. As duas se complementam.</p>
+
+  <h3>Jeito A — <code>Skill em área</code> (sem combar)</h3>
+  <p>Coloque <code>UseAoESkill</code> <strong>acima</strong> de <code>UseEleanorOffense</code> no seletor de ataque — a árvore padrão da Eleanor já vem assim. A tela <strong>Skills por homúnculo</strong> lista The One e Blazing no papel AoE: ordem, nível, gate “só se TIVER / NÃO TIVER”, ou esvaziar o papel.</p>
+  <p>A Eleanor <strong>tem</strong> ataque de alvo único (Sonic), então a AoE <strong>não</strong> dispara com 1 monstro. Vale o <code>AutoMobCount</code> (padrão 2): cluster → The One (se ready) senão Blazing; 1 alvo → a AoE falha e o seletor cai no combo. Blazing com 0 esferas é pulado (o jogo recusaria o cast).</p>
+
+  <h3>Jeito B — painel Combos / <code>fillThenCombo</code> (alvo único)</h3>
+  <p>O guarda-chuva continua necessário: a AoE não dispara com 1 mob, e quem não pôs <code>UseAoESkill</code> na árvore ainda precisa refill. No painel <strong>Combos da Eleanor</strong>, abaixo das cadeias, a seção <strong>Level 200+</strong> escolhe o modo. Com <strong>Encher e combar</strong>, The One sai se as esferas estão abaixo do limiar <strong>mesmo com 1 alvo</strong>; Blazing <strong>não</strong> dumpa em alvo único nesse modo.</p>
+  <p>Se a árvore tiver os dois nós, a ordem do seletor resolve o conflito: no cluster a AoE come o tick; o guarda-chuva só age quando a AoE recusa (1 alvo, recarga, sem esfera para Blazing, papel esvaziado).</p>
+  <table>
+    <thead><tr><th>Jeito</th><th>Onde se define</th><th>Quando usar</th></tr></thead>
+    <tbody>
+      <tr><td><strong>A — AoE</strong><br><code>Skill em área</code></td><td>Tela Skills (papel AoE) + nó na árvore</td><td>Farm em grupo, sem gastar a janela de combo.</td></tr>
+      <tr><td><strong>B — guarda-chuva</strong><br><code>Ofensiva da Eleanor</code></td><td>Painel Combos, seção Level 200+</td><td>Encher esferas no alvo único; dump se a árvore não tiver AoE.</td></tr>
+      <tr><td><strong>C — skill no nó</strong><br><code>Usar skill específica</code></td><td>No próprio nó (ID 8050 ou 8051)</td><td>Escape: um ponto exato da árvore. Veja <a href="#escape">abaixo</a>.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="modos">Presets do painel Combos</h2>
+  <p>O modo 200+ vive nos params do nó (ou no padrão de <code>homun_skills.json</code>). Precedência: <strong>nó &gt; padrão da tela de Skills &gt; off</strong>. Árvore antiga sem a chave continua só nas cadeias clássicas.</p>
+  <table>
+    <thead><tr><th>Modo</th><th>O que faz</th></tr></thead>
+    <tbody>
+      <tr><td><code>off</code></td><td>Só cadeias clássicas. Use para regressão ou se ainda não tem as skills 200+.</td></tr>
+      <tr><td><code>fillThenCombo</code></td><td>Padrão do painel. The One se as esferas estão abaixo do limiar (mesmo 1 alvo) ou se há cluster. Não dumpa Blazing em 1 alvo. Depois do fill, segue o combo.</td></tr>
+      <tr><td><code>aoeDump</code></td><td>The One depois Blazing no cluster. Útil se a árvore <strong>não</strong> tiver <code>UseAoESkill</code>.</td></tr>
+    </tbody>
+  </table>
+  <p>Knobs: mínimo de mobs para The One / Blazing, limiar de esferas para o fill, mínimo de esferas para o dump, níveis, e a opção de entrar no elo 1 da <em>próxima</em> janela. O meio da cadeia (Silvervein / Midnight / C.B.C. / E.Q.C.) <strong>nunca</strong> é abortado por 8050/8051 — o visualizador de combo não conta essas skills como “passo 2”.</p>
+
+  <h2 id="sim">Simulador: lvl 200 vs 215 vs 230</h2>
+  <p>O campo <strong>lvl</strong> do homúnculo (só no simulador) decide o que já foi aprendido. Para a Eleanor:</p>
+  <ul>
+    <li><strong>lvl 200</strong> — nem Blazing nem The One. Só as cadeias clássicas (ótimo para regressão dos cenários antigos).</li>
+    <li><strong>lvl 215</strong> — Blazing entra; The One ainda não.</li>
+    <li><strong>lvl 230</strong> (ou o padrão 999) — as duas.</li>
+  </ul>
+  <p>O painel lateral mostra as <strong>esferas estimadas</strong> e a sequência do combo sobre o sprite. Detalhes do campo lvl: <a href="simulador.html#lvl">Guia do Simulador</a>.</p>
+
+  <h2 id="escape"><code>UseSkill</code> explícito só como escape</h2>
+  <p>Se você precisa de The One ou Blazing num ponto muito específico (por exemplo, só contra um grupo de chefes via nó Monstro), use <code>Usar skill específica</code> com o ID 8051 ou 8050. Fora isso, prefira o papel AoE ou o guarda-chuva: eles já conhecem esferas, recarga, alcance e a ordem de prioridade.</p>
+</main>
+
+<footer>
+  BR-AI — IA de homúnculos do Ragnarok Online sobre árvore de comportamento. Documentação da versão estática (navegador).
+</footer>
+</body>
+</html>

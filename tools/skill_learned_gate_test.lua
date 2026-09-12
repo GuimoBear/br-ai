@@ -58,7 +58,7 @@ disp("setSkillChoice", { choices = { ["51"] = {
   aoeAtk = { SID.MH_BLAST_FORGE, SID.MH_LAVA_SLIDE },
   skillGate = { [tostring(SID.MH_BLAST_FORGE)] = { skill = SID.MH_BLAST_FORGE, negate = false } },
 } } })
-disp("load", combat(100)); check(firstSkill() == SID.MH_LAVA_SLIDE, "lvl100 sem Blast Forge -> Lava Slide (gate pula Blast Forge)")
+disp("load", combat(116)); check(firstSkill() == SID.MH_LAVA_SLIDE, "lvl116 sem Blast Forge -> Lava Slide (gate pula Blast Forge; Lava já aprendida)")
 disp("load", combat(215)); check(firstSkill() == SID.MH_BLAST_FORGE, "lvl215 com Blast Forge -> Blast Forge")
 
 -- (B) negate: Lava Slide "só se NÃO TIVER Blast Forge" (lista só Lava Slide)
@@ -66,7 +66,7 @@ disp("setSkillChoice", { choices = { ["51"] = {
   aoeAtk = { SID.MH_LAVA_SLIDE },
   skillGate = { [tostring(SID.MH_LAVA_SLIDE)] = { skill = SID.MH_BLAST_FORGE, negate = true } },
 } } })
-disp("load", combat(100)); check(firstSkill() == SID.MH_LAVA_SLIDE, "negate lvl100 (sem Blast Forge) -> usa Lava Slide")
+disp("load", combat(116)); check(firstSkill() == SID.MH_LAVA_SLIDE, "negate lvl116 (sem Blast Forge) -> usa Lava Slide")
 disp("load", combat(215)); check(firstSkill() == nil, "negate lvl215 (com Blast Forge) -> Lava Slide pulada (sem skill)")
 
 disp("setSkillChoice", { choices = {} })   -- limpa override

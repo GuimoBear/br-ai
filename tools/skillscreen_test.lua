@@ -37,7 +37,13 @@ end
 
 print("== papel sem skill → candidatos vazios ==")
 check(#roleOf(rc, "mainAtk").candidates == 0, "Dieter mainAtk: sem candidatos (papel vazio)")
-check(#roleOf(BRAI.roleConfig(C.ELEANOR), "aoeAtk").candidates == 0, "Eleanor aoeAtk: sem candidatos")
+local elAoe = roleOf(BRAI.roleConfig(C.ELEANOR), "aoeAtk")
+check(#elAoe.candidates >= 2, "Eleanor aoeAtk: 2+ candidatos")
+local elIds = {}
+for _, c in ipairs(elAoe.candidates) do elIds[c.id] = true end
+check(elIds[SID.MH_THE_ONE_FIGHTER_RISES] and elIds[SID.MH_BLAZING_AND_FURIOUS], "Eleanor aoeAtk: candidatos 8051 e 8050")
+check(#elAoe.effective == 2 and elAoe.effective[1].id == SID.MH_THE_ONE_FIGHTER_RISES and elAoe.effective[2].id == SID.MH_BLAZING_AND_FURIOUS,
+  "Eleanor aoeAtk effective: The One → Blazing")
 
 print("== candidatos: desc + maxLevel + effectiveMaxLevel + defaults ==")
 local aoe = roleOf(rc, "aoeAtk")

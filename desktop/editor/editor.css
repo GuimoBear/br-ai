@@ -196,6 +196,11 @@ button:disabled{opacity:.45;cursor:default}
 .ce-warn{font-size:11px;color:var(--red)}
 .ce-arrow{align-self:center;color:var(--muted);font-size:18px}
 .ce-actions{padding:12px 0}
+.ce-lvl200{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:10px}
+.ce-lvl200-title{font-size:13px;font-weight:600;color:var(--ink)}
+.ce-lvl200-ids{font-weight:500;color:var(--muted);font-size:11px;margin-left:8px}
+.ce-lvl200-cards{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap}
+.ce-l200lvl{width:100%}
 
 /* Sub-painel de Invocação (tela Skills) */
 .sm-panel { margin-top:14px; border-top:1px solid var(--line,#30363d); padding-top:10px; display:flex; flex-direction:column; gap:8px; }

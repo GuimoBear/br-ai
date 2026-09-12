@@ -1981,8 +1981,9 @@ function eleanorInspectorHtml(sel) {
   const style = p.style || 'power';
   const barr = (p.comboSpheres != null) ? p.comboSpheres : 5;
   const win = (p.window != null) ? p.window : 2000;
-  return '<div class="desc">Combo da Eleanor num só nó: estilo + esferas + barragem + segurança do Agarrão.</div>' +
-    '<div class="ce-sum">Estilo <b>' + esc(style) + '</b> · barragem <b>' + barr + '</b> esferas · janela <b>' + win + '</b>ms</div>' +
+  const l200 = p.lvl200Mode || 'off';
+  return '<div class="desc">Combo da Eleanor num só nó: estilo + esferas + barragem + segurança do Agarrão + ofensiva 200+.</div>' +
+    '<div class="ce-sum">Estilo <b>' + esc(style) + '</b> · barragem <b>' + barr + '</b> esferas · janela <b>' + win + '</b>ms · 200+ <b>' + esc(l200) + '</b></div>' +
     '<div class="field"><button id="iEleanorPanel" type="button" class="primary">✦ Abrir painel de Combos da Eleanor…</button></div>';
 }
 
@@ -2020,6 +2021,56 @@ function ceChainHtml(style, p) {
   });
   h += '</div></div>';
   return h;
+}
+
+function ceLvl200Html(p, isDefault) {
+  const d = (comboInfoCache && comboInfoCache.defaults) || {};
+  const info = (comboInfoCache && comboInfoCache.lvl200) || {};
+  const one = info.theOne || { iro: 'The One Fighter Rises', id: 8051, maxLevel: 10, sphereOp: 'fillMax' };
+  const blaze = info.blazing || { iro: 'Blazing and Furious', id: 8050, maxLevel: 10, sphereOp: 'consumeAll' };
+  const mode = (p.lvl200Mode != null) ? p.lvl200Mode : (isDefault ? (d.lvl200Mode || 'fillThenCombo') : 'off');
+  const modeOpts = [
+    ['off', 'Off (só combos clássicos)'],
+    ['fillThenCombo', 'Encher e combar (The One → combo)'],
+    ['aoeDump', 'Dump em área (The One → Blazing)'],
+  ].map(o => '<option value="' + o[0] + '"' + (o[0] === mode ? ' selected' : '') + '>' + o[1] + '</option>').join('');
+  const n = (k, def) => (p[k] != null) ? p[k] : (d[k] != null ? d[k] : def);
+  const t1m = n('theOneMinMobs', 2), t1b = n('theOneWhenSpheresBelow', 3);
+  const bm = n('blazingMinMobs', 2), bs = n('blazingMinSpheres', 5);
+  const oneLvl = (p.levels && p.levels.theOne) || one.maxLevel;
+  const blazeLvl = (p.levels && p.levels.blazing) || blaze.maxLevel;
+  let oneOpts = '', blazeOpts = '';
+  for (let v = 1; v <= (one.maxLevel || 10); v++) oneOpts += '<option value="' + v + '"' + (v === oneLvl ? ' selected' : '') + '>Lv ' + v + '</option>';
+  for (let v = 1; v <= (blaze.maxLevel || 10); v++) blazeOpts += '<option value="' + v + '"' + (v === blazeLvl ? ' selected' : '') + '>Lv ' + v + '</option>';
+  return '<div class="ce-lvl200">' +
+    '<div class="ce-lvl200-title">Level 200+ <span class="ce-lvl200-ids">IDs ' + one.id + ' / ' + blaze.id + ' · nv 230 / 215</span></div>' +
+    '<div class="ce-help">Não são elos de combo. <b>The One</b> enche as esferas; <b>Blazing</b> consome todas (hits = nº de esferas). Use a ação <b>Skill em área</b> na árvore para farm sem combar.</div>' +
+    '<div class="ce-cfg">' +
+      '<div class="field"><label>Modo 200+</label><select id="ceL200">' + modeOpts + '</select>' +
+        '<div class="ce-help">Off = árvores antigas. Encher e combar = The One com esferas baixas (mesmo 1 alvo). Dump = The One depois Blazing no cluster.</div></div>' +
+      '<div class="field"><label>The One se esferas &lt;</label>' +
+        '<input id="ceT1Below" type="number" min="0" max="10" value="' + t1b + '" />' +
+        '<div class="ce-help">Só no modo Encher e combar. 0–10.</div></div>' +
+      '<div class="field"><label>Mín. de mobs p/ The One</label>' +
+        '<input id="ceT1Mobs" type="number" min="0" value="' + t1m + '" /></div>' +
+      '<div class="field"><label>Mín. de mobs p/ Blazing</label>' +
+        '<input id="ceBlMobs" type="number" min="0" value="' + bm + '" /></div>' +
+      '<div class="field"><label>Mín. de esferas p/ Blazing</label>' +
+        '<input id="ceBlSph" type="number" min="0" max="10" value="' + bs + '" />' +
+        '<div class="ce-help">Blazing zera as esferas. Não dumpa abaixo deste limiar.</div></div>' +
+      '<div class="field"><label class="chk"><input id="ceL200Int" type="checkbox"' + (p.interruptCombo ? ' checked' : '') + ' /> Pode entrar no elo 1 da próxima janela</label>' +
+        '<div class="ce-help">Nunca quebra o meio da cadeia (Midnight / E.Q.C.). Ligado, o 200+ pode disparar no elo 1 depois que o combo fecha.</div></div>' +
+    '</div>' +
+    '<div class="ce-lvl200-cards">' +
+      '<div class="ce-link"><div class="ce-link-name">' + esc(one.iro) + '</div>' +
+        '<div class="ce-cost">💠 enche ao máximo</div>' +
+        '<select class="ce-l200lvl" id="ceLvlOne">' + oneOpts + '</select></div>' +
+      '<div class="ce-arrow">→</div>' +
+      '<div class="ce-link"><div class="ce-link-name">' + esc(blaze.iro) + '</div>' +
+        '<div class="ce-cost">💠 consome todas</div>' +
+        '<select class="ce-l200lvl" id="ceLvlBlaze">' + blazeOpts + '</select></div>' +
+    '</div>' +
+  '</div>';
 }
 
 function renderComboManager() {
@@ -2075,6 +2126,7 @@ function renderComboManager() {
           '<div class="ce-help">Desligado, a Eleanor usa só o estilo atual — evita o loop de Style Change que travava a AzzyAI.</div></div>' +
       '</div>' +
       '<div class="ce-chains">' + ceChainHtml('power', p) + ceChainHtml('grapple', p) + '</div>' +
+      ceLvl200Html(p, isDefault) +
       '</div>' +
       '<div class="mm-foot"><button id="ceSave" class="mm-save" type="button">💾 Salvar</button></div>' +
     '</div>';
@@ -2089,7 +2141,27 @@ function renderComboManager() {
   document.getElementById('ceThr').onchange = (e) => { const v = parseInt(e.target.value, 10); if (Number.isNaN(v)) delete p.grappleThreatLimit; else p.grappleThreatLimit = Math.max(0, v); persist(); };
   document.getElementById('ceGap').onchange = (e) => { const v = parseInt(e.target.value, 10); if (Number.isNaN(v) || v <= 0) delete p.minGap; else p.minGap = v; persist(); };
   document.getElementById('ceAllow').onchange = (e) => { if (e.target.checked) delete p.allowStyleSwitch; else p.allowStyleSwitch = false; persist(); };
-  ov.querySelectorAll('.ce-lvl').forEach(selct => selct.onchange = () => {
+  const numOrDel = (el, key, lo, hi) => {
+    const v = parseInt(el.value, 10);
+    if (Number.isNaN(v)) delete p[key];
+    else p[key] = Math.max(lo, hi != null ? Math.min(hi, v) : v);
+    persist();
+  };
+  document.getElementById('ceL200').onchange = (e) => { p.lvl200Mode = e.target.value; persist(); };
+  document.getElementById('ceT1Below').onchange = (e) => numOrDel(e.target, 'theOneWhenSpheresBelow', 0, 10);
+  document.getElementById('ceT1Mobs').onchange = (e) => numOrDel(e.target, 'theOneMinMobs', 0);
+  document.getElementById('ceBlMobs').onchange = (e) => numOrDel(e.target, 'blazingMinMobs', 0);
+  document.getElementById('ceBlSph').onchange = (e) => numOrDel(e.target, 'blazingMinSpheres', 0, 10);
+  document.getElementById('ceL200Int').onchange = (e) => { if (e.target.checked) p.interruptCombo = true; else delete p.interruptCombo; persist(); };
+  const setLvl200 = (key, el) => {
+    const v = parseInt(el.value, 10);
+    p.levels = p.levels || {};
+    if (Number.isNaN(v)) delete p.levels[key]; else p.levels[key] = v;
+    persist();
+  };
+  document.getElementById('ceLvlOne').onchange = (e) => setLvl200('theOne', e.target);
+  document.getElementById('ceLvlBlaze').onchange = (e) => setLvl200('blazing', e.target);
+  ov.querySelectorAll('.ce-chains .ce-lvl').forEach(selct => selct.onchange = () => {
     const st = selct.dataset.style, step = parseInt(selct.dataset.step, 10), val = parseInt(selct.value, 10);
     const links = (comboInfoCache && comboInfoCache[st]) || [];
     p.levels = p.levels || {};

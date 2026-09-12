@@ -25,6 +25,7 @@ Cada arquivo de teste cobre uma área:
 | `priority_test.lua` / `rescue_ks_test.lua` | Seleção de alvo, resgate, proteção anti-KS. |
 | `skillinfo_test.lua` / `skill_meta_test.lua` / `skillactions_test.lua` | Metadados e ações de skill. |
 | `combo_test.lua` / `ground_test.lua` / `interval_test.lua` | Combos, FX de área, timers. |
+| `eleanor_lvl200_test.lua` | Ofensiva 200+ da Eleanor (AoE + `fillThenCombo`/`aoeDump`/`off`) — contrato. |
 | `monsters_test.lua` / `phaseb_test.lua` / `check_test.lua` / `sim_test.lua` | Mundo simulado, IA de monstros, runtime. |
 
 Rode o conjunto inteiro antes de qualquer mudança que toque o motor ou os behaviors.

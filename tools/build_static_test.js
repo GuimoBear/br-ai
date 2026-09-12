@@ -66,7 +66,8 @@ ok(ed.indexOf('href="./sim.html"') >= 0, 'editor nav/SIM_URL -> ./sim.html');
 ok(ed.indexOf('href="./index.html"') < 0, 'editor não aponta p/ index.html (redirect)');
 // docs (site de ajuda) copiado + link injetado nas páginas reais
 ok(fs.existsSync(path.join(out, 'docs', 'index.html')), 'docs/index.html gerado');
-['editor.html','simulador.html','referencia-nos.html','primeiros-passos.html','monstros-e-skills.html','conceitos.html','help.css'].forEach(f => ok(fs.existsSync(path.join(out, 'docs', f)), 'docs/' + f));
+['editor.html','simulador.html','referencia-nos.html','primeiros-passos.html','monstros-e-skills.html','conceitos.html','eleanor.html','help.css'].forEach(f => ok(fs.existsSync(path.join(out, 'docs', f)), 'docs/' + f));
+ok(fs.existsSync(path.join(out, 'docs', 'img', 'tut-eleanor-lvl200.png')), 'docs/img/tut-eleanor-lvl200.png');
 ok(fs.existsSync(path.join(out, 'docs', 'img', 'editor-visao-geral.png')), 'docs/img/* (prints) copiados');
 ok(r.docs === true, 'build reporta docs:true');
 [['sim', sim], ['editor', ed]].forEach(([nm, h]) => {

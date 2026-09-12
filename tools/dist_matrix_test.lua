@@ -137,6 +137,8 @@ check(has(C.DIETER, "single", "aoeAtk", { AutoMobCount = 2 }, S.MH_LAVA_SLIDE), 
 check(not has(C.BAYERI, "single", "aoeAtk", { AutoMobCount = 2 }, S.MH_HEILIGE_STANGE), "GUARDA: Bayeri 1 mob (AutoMobCount=2) -> AoE NAO dispara (tem mainAtk)")
 check(has(C.BAYERI, "cluster", "aoeAtk", { AutoMobCount = 2 }, S.MH_HEILIGE_STANGE), "Bayeri cluster (>=AutoMobCount) -> Heilige Stange")
 check(not has(C.DIETER, "cluster", "aoeAtk", { AutoMobMode = 0 }, S.MH_LAVA_SLIDE), "AutoMobMode=0: Dieter cluster -> NAO dispara AoE")
+check(not has(C.ELEANOR, "single", "aoeAtk", { AutoMobCount = 2 }, S.MH_THE_ONE_FIGHTER_RISES), "Eleanor 1 mob (AutoMobCount=2) -> AoE NAO dispara (tem mainAtk)")
+check(has(C.ELEANOR, "cluster", "aoeAtk", { AutoMobCount = 2 }, S.MH_THE_ONE_FIGHTER_RISES), "Eleanor cluster -> The One")
 check(not has(C.VANILMIRTH, "single", "mainAtk", { UseAttackSkill = false }, S.HVAN_CAPRICE), "UseAttackSkill=false: Vanilmirth -> NAO conjura mainAtk")
 do
   local b = distCast(C.BAYERI, "none", "offBuff", {}, nil)

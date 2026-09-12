@@ -54,8 +54,8 @@ local meta = {
 	[S.MH_VOLCANIC_ASH]    = { iro = "Volcanic Ash",        cat = "aoe",     role = "debuffAoE",  desc = "Cinzas em área: cega e reduz atributos (debuff)." },
 	[S.MH_BLAST_FORGE]     = { iro = "Blast Forge",         cat = "aoe",     role = "aoeAtk",     desc = "Dano de fogo em área no chão." },
 	[S.MH_TEMPERING]       = { iro = "Tempering",           cat = "buff",    role = "offBuff",    desc = "Buff ofensivo: aumenta dano de fogo / resistência." },
-	[S.MH_BLAZING_AND_FURIOUS]={ iro = "Blazing and Furious", cat = "aoe",     role = "special",    desc = "Avança e dá dano físico em área (ignora DEF); consome TODAS as esferas." },
-	[S.MH_THE_ONE_FIGHTER_RISES]={ iro = "The One Fighter Rises", cat = "aoe", role = "special",    desc = "Dano físico em área em volta da Eleanor (ignora DEF); enche as esferas ao máximo." },
+	[S.MH_BLAZING_AND_FURIOUS]={ iro = "Blazing and Furious", cat = "aoe",     role = "aoeAtk",    desc = "Avança e dá dano físico em área (ignora DEF); consome TODAS as esferas." },
+	[S.MH_THE_ONE_FIGHTER_RISES]={ iro = "The One Fighter Rises", cat = "aoe", role = "aoeAtk",     desc = "Dano físico em área em volta da Eleanor (ignora DEF); enche as esferas ao máximo." },
 	-- lvl 200+
 	[S.MH_TWISTER_CUTTER]  = { iro = "Twister Cutter",      cat = "single",  role = "mainAtk",    desc = "Dano mágico de Vento de alvo único (ignora DEFM, alcance 7)." },
 	[S.MH_ABSOLUTE_ZEPHYR] = { iro = "Absolute Zephyr",     cat = "aoe",     role = "aoeAtk",     desc = "Dano mágico Neutro em área ao redor do alvo (ignora DEFM)." },
@@ -145,7 +145,20 @@ function BRAI.comboInfo()
 		end
 	end
 	out.defaults = { style = "power", window = 2000, autoComboSpheres = 5,
-		grappleThreatLimit = 1, minGap = 0, allowStyleSwitch = true }
+		grappleThreatLimit = 1, minGap = 0, allowStyleSwitch = true,
+		lvl200Mode = "fillThenCombo", theOneMinMobs = 2, theOneWhenSpheresBelow = 3,
+		blazingMinMobs = 2, blazingMinSpheres = 5, interruptCombo = false }
+	local one, blaze = S.MH_THE_ONE_FIGHTER_RISES, S.MH_BLAZING_AND_FURIOUS
+	local function lvl200Entry(sk, op)
+		local m = meta[sk]
+		return { id = sk, name = sys.name(sk), iro = (m and m.iro) or sys.name(sk),
+			sphereOp = op, maxLevel = list[sk] or 10,
+			reqLevel = (BRAI.skills.reqLevel and BRAI.skills.reqLevel[sk]) or 0 }
+	end
+	out.lvl200 = {
+		theOne = lvl200Entry(one, "fillMax"),
+		blazing = lvl200Entry(blaze, "consumeAll"),
+	}
 	-- mescla o padrão salvo (comboChoiceFor usa 'comboSpheres') sobre os defaults (a UI usa 'autoComboSpheres')
 	local saved = (BRAI.comboChoiceFor and BRAI.comboChoiceFor(C.ELEANOR)) or {}
 	if saved.style ~= nil then out.defaults.style = saved.style end
@@ -154,6 +167,12 @@ function BRAI.comboInfo()
 	if saved.grappleThreatLimit ~= nil then out.defaults.grappleThreatLimit = saved.grappleThreatLimit end
 	if saved.minGap ~= nil then out.defaults.minGap = saved.minGap end
 	if saved.allowStyleSwitch ~= nil then out.defaults.allowStyleSwitch = saved.allowStyleSwitch end
+	if saved.lvl200Mode ~= nil then out.defaults.lvl200Mode = saved.lvl200Mode end
+	if saved.theOneMinMobs ~= nil then out.defaults.theOneMinMobs = saved.theOneMinMobs end
+	if saved.theOneWhenSpheresBelow ~= nil then out.defaults.theOneWhenSpheresBelow = saved.theOneWhenSpheresBelow end
+	if saved.blazingMinMobs ~= nil then out.defaults.blazingMinMobs = saved.blazingMinMobs end
+	if saved.blazingMinSpheres ~= nil then out.defaults.blazingMinSpheres = saved.blazingMinSpheres end
+	if saved.interruptCombo ~= nil then out.defaults.interruptCombo = saved.interruptCombo end
 	out.savedLevels = saved.levels   -- níveis por elo salvos (a UI reflete)
 	return out
 end

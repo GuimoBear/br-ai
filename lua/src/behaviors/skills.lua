@@ -48,8 +48,18 @@ local function effRole(p, bb, role, key)
 end
 
 ------------------------------------------------------------------ ofensivas
+-- Extra-gates de AoE: skill aprendida (lvl vs req no sim) e esferas p/ dump (Blazing).
+-- Consumir todas as esferas com 0 esferas faria o jogo recusar o cast.
+local function aoeUsable(bb, sk)
+	if not sk then return false end
+	if not sys.learned(bb, sk) then return false end
+	if BRAI.sphereOps and BRAI.sphereOps[sk] == "consumeAll" and sys.spheres(bb) < 1 then return false end
+	return true
+end
+
 -- tenta conjurar UMA skill de AoE (a ação itera a lista de prioridade do papel)
 local function tryCastAoE(bb, sk, mobNeeded, p)
+	if not aoeUsable(bb, sk) then return false end
 	local lvl = usable(bb, sk, effRole(p, bb, "aoeAtk", "AttackSkillReserveSP"))
 	if not lvl then return false end
 	lvl = capSkill(bb, "aoeAtk", sk, lvl)
@@ -483,6 +493,58 @@ local function mergeCombo(bb, p)
 	return m
 end
 
+-- Skills 200+ (The One / Blazing): NÃO são elos de combo. Ausente = off (árvores antigas).
+local function lvl200ModeOf(p)
+	local m = p and p.lvl200Mode
+	if m == "fillThenCombo" or m == "aoeDump" or m == "off" then return m end
+	return "off"
+end
+
+local function skillLevel200(bb, p, sk, key)
+	local n = p and p.levels and tonumber(p.levels[key])
+	local known = sys.knownLevel(bb, sk)
+	if n and n >= 1 and known then return math.min(math.floor(n), known) end
+	return known
+end
+
+local function emitLvl200(bb, p, sk, key)
+	if not sys.knows(bb, sk) or not sys.learned(bb, sk) then return false end
+	if BRAI.sphereOps and BRAI.sphereOps[sk] == "consumeAll" then
+		local need = tonumber(p and p.blazingMinSpheres) or 5
+		if need < 1 then need = 1 end
+		if sys.spheres(bb) < need then return false end
+	end
+	local lvl = skillLevel200(bb, p, sk, key)
+	if not lvl then return false end
+	if not sys.ready(bb, sk) then return false end
+	if not sys.enoughSP(bb, sk, lvl, 0) then return false end
+	if not sys.inRange(bb, sk, lvl) then return false end
+	local mode = sys.targetMode(sk)
+	local tgt = (mode == 0) and bb.self.id or bb.target
+	bb:setIntent("skill", { skill = sk, level = lvl, target = tgt, mode = mode, reason = sys.name(sk) })
+	return true
+end
+
+local function tryLvl200(bb, p, step)
+	if step and step > 1 then return false end            -- nunca interrompe o meio da cadeia
+	local mode = lvl200ModeOf(p)
+	if mode == "off" then return false end
+	local oneMin = tonumber(p and p.theOneMinMobs) or 2
+	local blazeMin = tonumber(p and p.blazingMinMobs) or 2
+	local below = tonumber(p and p.theOneWhenSpheresBelow) or 3
+	local threat = BRAI.perception.threatCount(bb, (p and p.grappleRadius) or 3)
+	local one, blaze = BRAI.skills.id.MH_THE_ONE_FIGHTER_RISES, BRAI.skills.id.MH_BLAZING_AND_FURIOUS
+	if mode == "fillThenCombo" then
+		if sys.spheres(bb) < below or threat >= oneMin then
+			return emitLvl200(bb, p, one, "theOne")
+		end
+		return false
+	end
+	if threat >= oneMin and emitLvl200(bb, p, one, "theOne") then return true end
+	if threat >= blazeMin and emitLvl200(bb, p, blaze, "blazing") then return true end
+	return false
+end
+
 reg.action("UseEleanorOffense", function(bb, p)
 	if bb.self.homunType ~= ELEANOR then return S.FAILURE end
 	if not bb.target then bb.persist.combo = nil; bb.persist.grappleRooted = false; return S.FAILURE end   -- alvo morto/sumiu (R1)
@@ -495,6 +557,10 @@ reg.action("UseEleanorOffense", function(bb, p)
 
 	local window = (p and p.window) or 2000
 	local step, chain = comboStep(bb, style, window)
+	if tryLvl200(bb, p, step) then
+		bb.persist.combo = nil
+		return S.SUCCESS
+	end
 	if not chain then return S.FAILURE end
 
 	local barragem = (p and p.comboSpheres) or bb.config.AutoComboSpheres or 0
@@ -519,12 +585,14 @@ reg.action("UseEleanorOffense", function(bb, p)
 	-- enraizado durante Tinder/CBC (Flee=0); E.Q.C. libera; power nunca enraíza.
 	bb.persist.grappleRooted = (sk == BRAI.skills.id.MH_TINDER_BREAKER or sk == BRAI.skills.id.MH_CBC)
 	return S.SUCCESS
-end, { desc = "Eleanor: combo + estilo + barragem (esferas) num só nó. style: power|grapple|auto.",
-	params = { style = "string", comboSpheres = "number", window = "number", grappleThreatLimit = "number", minGap = "number", allowStyleSwitch = "boolean" } })
+end, { desc = "Eleanor: combo + estilo + barragem (esferas) + ofensiva 200+ num só nó. style: power|grapple|auto. lvl200Mode: off|fillThenCombo|aoeDump.",
+	params = { style = "string", comboSpheres = "number", window = "number", grappleThreatLimit = "number", minGap = "number", allowStyleSwitch = "boolean",
+		lvl200Mode = "string", theOneMinMobs = "number", theOneWhenSpheresBelow = "number", blazingMinMobs = "number", blazingMinSpheres = "number", interruptCombo = "boolean" } })
 
 -- expõe as peças internas p/ teste de unidade (PLANO §9.1)
 BRAI.eleanor = { currentStyle = currentStyle, desiredStyle = desiredStyle,
 	ensureStyle = ensureStyle, comboStep = comboStep, isTargetBoss = isTargetBoss,
-	threatCount = function(bb, r) return BRAI.perception.threatCount(bb, r) end }
+	threatCount = function(bb, r) return BRAI.perception.threatCount(bb, r) end,
+	aoeUsable = aoeUsable, tryLvl200 = tryLvl200, lvl200ModeOf = lvl200ModeOf }
 
 return true

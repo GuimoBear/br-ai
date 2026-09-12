@@ -15,6 +15,7 @@ local LEVEL_KEYS = { mainAtkLevel = "mainAtk", aoeAtkLevel = "aoeAtk", offBuffLe
 -- Padrão de COMBO por homúnculo (só Eleanor por ora; estrutura genérica por homunType).
 -- Chaves iguais às dos params do nó UseEleanorOffense (precedência node>padrão é trivial).
 local COMBO_STYLE = { power = true, grapple = true, auto = true }
+local LVL200_MODE = { off = true, fillThenCombo = true, aoeDump = true }
 local function parseCombo(c)
 	if type(c) ~= "table" then return nil end
 	local o = {}
@@ -25,6 +26,12 @@ local function parseCombo(c)
 	local g = num("grappleThreatLimit", 0);           if g then o.grappleThreatLimit = g end
 	local mg = num("minGap", 0);                       if mg then o.minGap = mg end
 	if type(c.allowStyleSwitch) == "boolean" then o.allowStyleSwitch = c.allowStyleSwitch end
+	if type(c.lvl200Mode) == "string" and LVL200_MODE[c.lvl200Mode] then o.lvl200Mode = c.lvl200Mode end
+	local t1m = num("theOneMinMobs", 0);              if t1m then o.theOneMinMobs = t1m end
+	local t1b = num("theOneWhenSpheresBelow", 0, 10); if t1b then o.theOneWhenSpheresBelow = t1b end
+	local bm = num("blazingMinMobs", 0);              if bm then o.blazingMinMobs = bm end
+	local bs = num("blazingMinSpheres", 0, 10);       if bs then o.blazingMinSpheres = bs end
+	if type(c.interruptCombo) == "boolean" then o.interruptCombo = c.interruptCombo end
 	if type(c.levels) == "table" then
 		o.levels = {}
 		for _, st in ipairs({ "power", "grapple" }) do
@@ -33,6 +40,9 @@ local function parseCombo(c)
 				for i, lv in ipairs(c.levels[st]) do local n = tonumber(lv); if n and n >= 1 then o.levels[st][i] = math.floor(n) end end
 			end
 		end
+		local t1 = tonumber(c.levels.theOne); if t1 and t1 >= 1 then o.levels.theOne = math.floor(t1) end
+		local bl = tonumber(c.levels.blazing); if bl and bl >= 1 then o.levels.blazing = math.floor(bl) end
+		if not next(o.levels) then o.levels = nil end
 	end
 	return next(o) and o or nil
 end
